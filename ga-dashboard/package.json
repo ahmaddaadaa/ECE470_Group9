@@ -12,7 +12,7 @@
     "react-scripts": "5.0.1",
     "recharts": "^3.8.1",
     "web-vitals": "^2.1.4",
-    "homepage": "https://ahmaddaadaa.github.io/ga-dashboard"
+    "homepage": "https://ahmaddaadaa.github.io/ECE470_Group9"
   },
   "scripts": {
     "start": "react-scripts start",
