@@ -1,0 +1,60 @@
+body {
+  margin: 0;
+  background: #f5f7fa;
+  font-family: Arial, sans-serif;
+}
+
+.app {
+  max-width: 1400px;
+  margin: auto;
+  padding: 20px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.button-section {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.run-button {
+  background: #2563eb;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.reset-button {
+  background: #555;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.status-banner {
+  margin-top: 20px;
+  text-align: center;
+  font-weight: bold;
+}
+
+@media (max-width: 1000px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
