@@ -2,7 +2,10 @@ import random
 
 # makes a random 12 bit binary list (our chromosome)
 def create_chromosome():
-    return [random.randint(0, 1) for _ in range(12)]
+    chromosome = []
+    for _ in range(12):
+        chromosome.append(random.randint(0, 1))
+    return chromosome
 
 #breaks that chromoms into 3 bit chunks one for each action 
 def break_chromosome(chromosome):
@@ -43,9 +46,37 @@ def calculate_fitness(chromosome, final_temp):
     return Benefit - penalty - cost
 
 
+def exhastive_search(current_temp):
+    best_chrom = None
+    best_score = -9999
+
+    for i in range(4096):
+        chromosome = []
+        for bit in format(i, '012b'):
+            chromosome.append(int(bit))
+        final_temp = simulate_temperature(chromosome, current_temp)
+        new_score = calculate_fitness(chromosome, final_temp)
+        if new_score > best_score:
+            best_score = new_score
+            best_chrom = chromosome
+    
+    return best_chrom, best_score
+
+
+
+
+
+
+        
+        
+
+
+
 #test based on 42 degree temp
 if __name__ == "__main__":
 
+
+    print("\nsingle random chromosome")
     #create crom
     chrom = create_chromosome()
     #show gene
@@ -56,11 +87,19 @@ if __name__ == "__main__":
     print("Mixing %:", round(bits_to_percent(mixing) * 100), "%")
     print("Nutrients %:",    round(bits_to_percent(nutrients)    * 100), "%")
     #show score for fitness
-    start_temp= 42
-    new_temp = simulate_temperature(chrom, start_temp)
-    score = calculate_fitness(chrom, new_temp)
+    current_temp= 42
+    final_temp = simulate_temperature(chrom, current_temp)
+    score = calculate_fitness(chrom, final_temp)
 
 
-    print(f"Start Temp: {start_temp}°C")
-    print(f"Final Temp: {round(new_temp, 2)}°C")
+    print(f"Start Temp: {current_temp}°C")
+    print(f"Final Temp: {round(final_temp, 2)}°C")
     print(f"Fitness Score: {round(score, 2)}")
+
+
+    print("\nExhaustive Search")
+    best_chrom, best_score = exhastive_search(current_temp)
+    best_final_temp = simulate_temperature(best_chrom, current_temp)
+    print("Best Chromosome:", best_chrom)
+    print("Best Final Temp:", round(best_final_temp, 2), "°C")
+    print("Best Fitness Score:", round(best_score, 2))
