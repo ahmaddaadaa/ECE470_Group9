@@ -34,6 +34,8 @@ def simulate_temperature(chromosome, current_temp):
     )
     return current_temp + delta_T
 
+# performs the fitness function we decided on benefit - penalty - cost
+
 def calculate_fitness(chromosome, final_temp):
     cooling, heating, mixing, nutrients = break_chromosome(chromosome)
 
@@ -45,6 +47,7 @@ def calculate_fitness(chromosome, final_temp):
     
     return Benefit - penalty - cost
 
+#perform a search of the the whole seach space to find the best chromsome
 
 def exhastive_search(current_temp):
     best_chrom = None
@@ -62,10 +65,14 @@ def exhastive_search(current_temp):
     
     return best_chrom, best_score
 
+
+#start of hill climbing just set up the starting point need to learn how to implement 
+
 def hill_climbing(current_temp):
     current_chrom = create_chromosome()
     final_temp = simulate_temperature(current_chrom, current_temp)
     current_score = calculate_fitness(current_chrom, final_temp)
+
 
 
 
@@ -88,12 +95,12 @@ if __name__ == "__main__":
     final_temp = simulate_temperature(chrom, current_temp)
     score = calculate_fitness(chrom, final_temp)
 
-
+    #score for single random chromosome
     print(f"Start Temp: {current_temp}°C")
     print(f"Final Temp: {round(final_temp, 2)}°C")
     print(f"Fitness Score: {round(score, 2)}")
 
-
+    #exhastive search 
     print("\nExhaustive Search")
     best_chrom, best_score = exhastive_search(current_temp)
     best_final_temp = simulate_temperature(best_chrom, current_temp)
