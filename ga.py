@@ -62,13 +62,10 @@ def exhastive_search(current_temp):
     
     return best_chrom, best_score
 
-
-
-
-
-
-        
-        
+def hill_climbing(current_temp):
+    current_chrom = create_chromosome()
+    final_temp = simulate_temperature(current_chrom, current_temp)
+    current_score = calculate_fitness(current_chrom, final_temp)
 
 
 
