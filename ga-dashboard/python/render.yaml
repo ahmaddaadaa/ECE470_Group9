@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: ece470-ga-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: HOST
+        value: "0.0.0.0"
+      - key: DATA_DIR
+        value: "/app/public/data"
