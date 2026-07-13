@@ -13,9 +13,6 @@ export default function BluetoothPanel({
   return (
     <div className="toolbar ble-toolbar">
       <span className="ble-label">Hardware</span>
-      {!supported && (
-        <span className="queue-note">Use Chrome for Bluetooth</span>
-      )}
       {supported && !connected && (
         <button type="button" disabled={busy} onClick={onConnect}>
           Connect board
