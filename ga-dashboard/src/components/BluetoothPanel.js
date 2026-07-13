@@ -1,11 +1,10 @@
 export default function BluetoothPanel({
   supported,
   connected,
-  deviceName,
-  status,
-  boardTemp,
   autoSend,
+  potLink,
   onAutoSendChange,
+  onPotLinkChange,
   onConnect,
   onDisconnect,
   onSendLatest,
@@ -13,27 +12,23 @@ export default function BluetoothPanel({
 }) {
   return (
     <div className="toolbar ble-toolbar">
-      <span className="ble-label">Arduino BLE</span>
+      <span className="ble-label">Hardware</span>
       {!supported && (
-        <span className="queue-note">
-          Web Bluetooth needs Chrome/Edge on localhost or HTTPS
-        </span>
+        <span className="queue-note">Use Chrome for Bluetooth</span>
       )}
       {supported && !connected && (
         <button type="button" disabled={busy} onClick={onConnect}>
-          Connect MKR WIFI 1010
+          Connect board
         </button>
       )}
       {connected && (
         <>
-          <span className="ble-connected">
-            Connected{deviceName ? `: ${deviceName}` : ""}
-          </span>
+          <span className="ble-connected">Connected</span>
           <button type="button" onClick={onDisconnect}>
             Disconnect
           </button>
           <button type="button" onClick={onSendLatest} disabled={busy}>
-            Send latest N/M/C/H
+            Send levels
           </button>
           <label className="check">
             <input
@@ -41,16 +36,18 @@ export default function BluetoothPanel({
               checked={autoSend}
               onChange={(e) => onAutoSendChange(e.target.checked)}
             />
-            Auto-send on each step
+            Auto send
           </label>
-          {boardTemp != null && (
-            <span className="queue-note">
-              Board T: {Number(boardTemp).toFixed(2)} C
-            </span>
-          )}
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={potLink}
+              onChange={(e) => onPotLinkChange(e.target.checked)}
+            />
+            Pot for extra heat
+          </label>
         </>
       )}
-      {status && <span className="queue-note ble-status">{status}</span>}
     </div>
   );
 }

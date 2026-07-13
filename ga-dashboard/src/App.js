@@ -20,30 +20,40 @@ export default function App() {
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [status, setStatus] = useState(
-    "Apply Disturbance, then Run Optimization — red = no control, green = GA recovery."
-  );
   const [stepLog, setStepLog] = useState([]);
   const [chartPoints, setChartPoints] = useState([]);
   const [ranked, setRanked] = useState(null);
   const [rankStep, setRankStep] = useState(null);
   const [resume, setResume] = useState(null);
   const [inject, setInject] = useState(0.8);
-  const [sticky, setSticky] = useState(false);
   const [queue, setQueue] = useState({ nextStep: 0, queuedHeat: null });
   const player = useRef(null);
 
   const bleRef = useRef(null);
   const [bleConnected, setBleConnected] = useState(false);
-  const [bleName, setBleName] = useState("");
-  const [bleStatus, setBleStatus] = useState("");
-  const [boardTemp, setBoardTemp] = useState(null);
   const [bleAutoSend, setBleAutoSend] = useState(true);
+  const [potLink, setPotLink] = useState(true);
   const bleAutoSendRef = useRef(true);
+  const potLinkRef = useRef(true);
+  const injectRef = useRef(Number(inject));
+  const playingRef = useRef(false);
+  const busyRef = useRef(false);
 
   useEffect(() => {
     bleAutoSendRef.current = bleAutoSend;
   }, [bleAutoSend]);
+  useEffect(() => {
+    potLinkRef.current = potLink;
+  }, [potLink]);
+  useEffect(() => {
+    injectRef.current = Number(inject);
+  }, [inject]);
+  useEffect(() => {
+    playingRef.current = playing;
+  }, [playing]);
+  useEffect(() => {
+    busyRef.current = busy;
+  }, [busy]);
 
   useEffect(
     () => () => {
@@ -51,82 +61,26 @@ export default function App() {
       if (bleRef.current) {
         try {
           bleRef.current.disconnect();
-        } catch (_) {
-          /* ignore */
-        }
+        } catch (_) {}
         bleRef.current = null;
       }
     },
     []
   );
 
-  const sendActionToBoard = async (action, note) => {
+  const sendActionToBoard = async (action) => {
     if (!bleRef.current?.connected || !action) return;
     try {
-      const sent = await bleRef.current.sendFromAction(action);
-      if (sent) {
-        setBleStatus(
-          `Sent ${sent.text}${note ? ` (${note})` : ""}`
-        );
-      }
-    } catch (e) {
-      setBleStatus(`Send failed: ${e.message}`);
-    }
+      await bleRef.current.sendFromAction(action);
+    } catch (_) {}
   };
 
-  const onBleConnect = async () => {
-    try {
-      setBleStatus("Requesting device…");
-      const client = await connectArduino({
-        onStatus: (s) => setBleStatus(s),
-        onTemperature: (t) => setBoardTemp(t),
-        onDisconnect: () => {
-          bleRef.current = null;
-          setBleConnected(false);
-          setBleName("");
-          setBleStatus("Disconnected");
-        }
-      });
-      bleRef.current = client;
-      setBleConnected(true);
-      setBleName(client.name);
-      setBleStatus("Connected");
-      setStatus("Arduino MKR WIFI 1010 connected over BLE.");
-    } catch (e) {
-      setBleStatus(e.message || "Connect cancelled");
-    }
-  };
-
-  const onBleDisconnect = () => {
-    if (bleRef.current) {
-      bleRef.current.disconnect();
-      bleRef.current = null;
-    }
-    setBleConnected(false);
-    setBleName("");
-    setBoardTemp(null);
-    setBleStatus("Disconnected");
-  };
-
-  const onBleSendLatest = () => {
-    const latest =
-      stepLog.length > 0
-        ? [...stepLog].sort((a, b) => Number(b.t) - Number(a.t))[0]
-        : null;
-    const action = latest?.applied || latest?.command || ranked?.[0];
-    if (!action) {
-      setBleStatus("No chromosome yet — run optimization first.");
-      return;
-    }
-    sendActionToBoard(
-      {
-        n: action.nutrients ?? action.n,
-        m: action.mixing ?? action.m,
-        c: action.cooling ?? action.c,
-        h: action.heating ?? action.h
-      },
-      "manual"
-    );
+  const clearHistory = () => {
+    setStepLog([]);
+    setChartPoints([]);
+    setRanked(null);
+    setRankStep(null);
+    setResume(null);
   };
 
   const stopLive = () => {
@@ -140,36 +94,71 @@ export default function App() {
     setPlaying(false);
   };
 
-  const clearHistory = () => {
-    setStepLog([]);
-    setChartPoints([]);
-    setRanked(null);
-    setRankStep(null);
-    setResume(null);
-  };
-
   const onDisturb = () => {
+    if (playingRef.current || busyRef.current) return;
+    const strength = Number(D);
+    if (!Number.isFinite(strength)) return;
     stopLive();
-    const p = createRandomScenario(Number(D));
+    const p = createRandomScenario(strength);
+    setD(strength);
     setPack(p);
     setResult(null);
     clearHistory();
-    // Show uncontrolled path briefly as starting context (same single-line style)
     setChartPoints(p.baselinePoints);
     setQueue({ nextStep: 0, queuedHeat: null });
-    setStatus(
-      `Disturbance ready (T0=${p.scenario.T0} C). Without control max ~${p.baselineMaxTemp} C. Run Optimization to recover.`
-    );
+  };
+
+  const onPotExtraHeat = (e) => {
+    if (!potLinkRef.current) return;
+    const rounded = Math.round(Number(e) * 100) / 100;
+    if (!Number.isFinite(rounded)) return;
+    injectRef.current = rounded;
+    setInject(rounded);
+  };
+
+  const onBleConnect = async () => {
+    try {
+      const client = await connectArduino({
+        onExtraHeat: onPotExtraHeat,
+        onDisconnect: () => {
+          bleRef.current = null;
+          setBleConnected(false);
+        }
+      });
+      bleRef.current = client;
+      setBleConnected(true);
+    } catch (_) {
+      setBleConnected(false);
+    }
+  };
+
+  const onBleDisconnect = () => {
+    if (bleRef.current) {
+      bleRef.current.disconnect();
+      bleRef.current = null;
+    }
+    setBleConnected(false);
+  };
+
+  const onBleSendLatest = () => {
+    const latest =
+      stepLog.length > 0
+        ? [...stepLog].sort((a, b) => Number(b.t) - Number(a.t))[0]
+        : null;
+    const action = latest?.applied || latest?.command || ranked?.[0];
+    if (!action) return;
+    sendActionToBoard({
+      n: action.nutrients ?? action.n,
+      m: action.mixing ?? action.m,
+      c: action.cooling ?? action.c,
+      h: action.heating ?? action.h
+    });
   };
 
   const onOptimize = () => {
-    if (!pack) {
-      setStatus("Apply a disturbance first.");
-      return;
-    }
+    if (!pack) return;
     stopLive();
     setBusy(true);
-    setStatus("GA recovering temperature into safe band...");
     setTimeout(() => {
       try {
         const r = runGA(pack.scenario);
@@ -179,18 +168,12 @@ export default function App() {
         setRanked(r.rankedChromosomes);
         setRankStep(r.meta?.rankingStep ?? null);
         setResume(r.resume);
-        setStatus(
-          `Dual curves ready. Green max=${r.statistics.maxTemperature} C · in band ${(
-            r.statistics.pctInRange * 100
-          ).toFixed(0)}%. Red no-control max=${r.statistics.baselineMaxT} C.`
-        );
         const actions = r.bestChromosome?.actions || [];
         const last = actions[actions.length - 1];
         if (last && bleAutoSendRef.current) {
-          sendActionToBoard(last.applied || last.command, "optimize");
+          sendActionToBoard(last.applied || last.command);
         }
-      } catch (e) {
-        setStatus(`Error: ${e.message}`);
+      } catch (_) {
       } finally {
         setBusy(false);
       }
@@ -198,10 +181,7 @@ export default function App() {
   };
 
   const startLive = (fromResume) => {
-    if (!pack) {
-      setStatus("Apply a disturbance first.");
-      return;
-    }
+    if (!pack) return;
     stopLive();
     setPlaying(true);
 
@@ -230,11 +210,10 @@ export default function App() {
       ]);
     }
 
-    setStatus("Live: red = no control, green = GA recovery each second.");
-
-    player.current = playLive(pack.scenario, null, {
+    player.current = playLive(pack.scenario, {
       delayMs: 1000,
       resume: seed,
+      getExtraHeat: () => injectRef.current,
       onStep: (s) => {
         setChartPoints(s.points);
         setStepLog(s.log);
@@ -243,10 +222,9 @@ export default function App() {
           setRankStep(s.rankingStep);
         }
         if (s.continuous) setResume(s.continuous);
-        setStatus(s.status);
         if (bleAutoSendRef.current && s.log?.length) {
           const row = s.log[s.log.length - 1];
-          sendActionToBoard(row.applied || row.command, `step ${row.t}`);
+          sendActionToBoard(row.applied || row.command);
         }
       },
       onQueue: (q) => setQueue({ nextStep: q.nextStep, queuedHeat: q.queuedHeat }),
@@ -256,29 +234,19 @@ export default function App() {
         setChartPoints(s.points);
         setStepLog(s.log);
         if (s.continuous) setResume(s.continuous);
-        setStatus(`Stopped at step ${s.steps}.`);
       }
     });
   };
 
   const onLive = () => {
-    if (!pack) {
-      setStatus("Apply a disturbance first.");
-      return;
-    }
+    if (!pack) return;
     startLive(resume || result?.resume || null);
   };
 
   const onQueueInject = () => {
     if (!player.current || !playing) return;
-    const info = player.current.queueNextDisturbance(Number(inject), { sticky });
+    const info = player.current.queueNextDisturbance(Number(inject));
     setQueue({ nextStep: info.nextStep, queuedHeat: info.queuedHeat });
-    const s = `${Number(inject) >= 0 ? "+" : ""}${Number(inject).toFixed(1)} C`;
-    setStatus(
-      sticky
-        ? `Extra heat ${s} every step from ${info.nextStep}.`
-        : `Extra heat ${s} queued for step ${info.nextStep}.`
-    );
   };
 
   const onReset = () => {
@@ -287,8 +255,6 @@ export default function App() {
     setResult(null);
     clearHistory();
     setQueue({ nextStep: 0, queuedHeat: null });
-    setSticky(false);
-    setStatus("Reset complete.");
   };
 
   const chartWin = chartPoints.slice(-CHART_WINDOW);
@@ -306,17 +272,12 @@ export default function App() {
     ranked?.[0]?.fitness ??
     result?.fitness?.aggregate ??
     null;
-  const latestCost =
-    latestRow?.stepCost ?? ranked?.[0]?.cost ?? null;
+  const latestCost = latestRow?.stepCost ?? ranked?.[0]?.cost ?? null;
   const planCost = stepLog.length
     ? stepLog.reduce((s, r) => s + (Number(r.stepCost) || 0), 0)
     : result?.statistics?.controlCost ?? null;
   const stepIndex =
-    rankStep != null
-      ? rankStep
-      : latestRow != null
-        ? latestRow.t
-        : null;
+    rankStep != null ? rankStep : latestRow != null ? latestRow.t : null;
 
   const optTemps = stepLog
     .map((r) => r.optimizedT ?? r.temperature)
@@ -391,23 +352,16 @@ export default function App() {
                   max="2.5"
                   step="0.1"
                   value={inject}
-                  onChange={(e) => setInject(e.target.value)}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    setInject(v);
+                    injectRef.current = v;
+                  }}
                 />
                 <span>
                   {Number(inject) >= 0 ? "+" : ""}
                   {Number(inject).toFixed(1)}
                 </span>
-              </label>
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={sticky}
-                  onChange={(e) => {
-                    setSticky(e.target.checked);
-                    if (player.current) player.current.setSticky(e.target.checked);
-                  }}
-                />
-                Repeat
               </label>
               <button type="button" onClick={onQueueInject}>
                 Queue
@@ -418,7 +372,6 @@ export default function App() {
                 onClick={() => {
                   if (player.current) player.current.clearQueue();
                   setQueue({ nextStep: queue.nextStep, queuedHeat: null });
-                  setSticky(false);
                 }}
               >
                 Clear
@@ -427,16 +380,13 @@ export default function App() {
           )}
         </div>
 
-        <p className="status">{status}</p>
-
         <BluetoothPanel
           supported={bleSupported()}
           connected={bleConnected}
-          deviceName={bleName}
-          status={bleStatus}
-          boardTemp={boardTemp}
           autoSend={bleAutoSend}
+          potLink={potLink}
           onAutoSendChange={setBleAutoSend}
+          onPotLinkChange={setPotLink}
           onConnect={onBleConnect}
           onDisconnect={onBleDisconnect}
           onSendLatest={onBleSendLatest}

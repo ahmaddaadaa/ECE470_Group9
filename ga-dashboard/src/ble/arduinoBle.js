@@ -1,6 +1,3 @@
-// BLE client for the MKR WIFI 1010 sketch (same UUIDs as the .ino file).
-// Works in Chrome/Edge on localhost or HTTPS.
-
 export const BLE_SERVICE = "19b10000-e8f2-537e-4f6c-d104768a1214";
 export const BLE_CMD = "19b10001-e8f2-537e-4f6c-d104768a1214";
 export const BLE_TEMP = "19b10002-e8f2-537e-4f6c-d104768a1214";
@@ -15,57 +12,144 @@ function clampLevel(v) {
   return Math.max(0, Math.min(7, n));
 }
 
+export function parseStatusText(text) {
+  const out = { raw: text, extraHeat: null, ok: null };
+  if (!text) return out;
+
+  const eMatch = text.match(/E\s*=\s*([-+0-9.]+)/i);
+  if (eMatch) {
+    const e = Number(eMatch[1]);
+    if (Number.isFinite(e)) out.extraHeat = Math.max(-2.5, Math.min(2.5, e));
+  }
+
+  const dMatch = text.match(/D\s*=\s*([0-9.]+)/i);
+  if (dMatch && out.extraHeat == null) {
+    const d = Number(dMatch[1]);
+    if (Number.isFinite(d)) {
+      out.extraHeat = Math.max(-2.5, Math.min(2.5, (d - 1.25) * 3));
+    }
+  }
+
+  if (/^OK/i.test(text)) out.ok = text;
+  return out;
+}
+
 export async function connectArduino(handlers = {}) {
   if (!bleSupported()) {
     throw new Error(
-      "Web Bluetooth not available. Use Chrome/Edge on localhost or HTTPS."
+      "Web Bluetooth not available. Use Google Chrome on http://localhost (not Safari)."
     );
   }
 
-  const device = await navigator.bluetooth.requestDevice({
-    filters: [{ namePrefix: "ECE470" }],
-    optionalServices: [BLE_SERVICE]
-  });
+  let device;
+  try {
+    device = await navigator.bluetooth.requestDevice({
+      filters: [
+        { namePrefix: "ECE470" },
+        { name: "ECE470-MKR1010" },
+        { services: [BLE_SERVICE] }
+      ],
+      optionalServices: [BLE_SERVICE]
+    });
+  } catch (e1) {
+    if (e1 && e1.name === "NotFoundError") {
+      device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: [BLE_SERVICE]
+      });
+    } else {
+      throw e1;
+    }
+  }
 
-  const server = await device.gatt.connect();
+  if (!device.gatt) {
+    throw new Error("No GATT on device");
+  }
+
+  let server;
+  let lastErr;
+  for (let i = 0; i < 4; i += 1) {
+    try {
+      server = await device.gatt.connect();
+      lastErr = null;
+      break;
+    } catch (err) {
+      lastErr = err;
+      await new Promise((r) => setTimeout(r, 400));
+    }
+  }
+  if (!server) {
+    throw lastErr || new Error("GATT connect failed");
+  }
+
   const service = await server.getPrimaryService(BLE_SERVICE);
   const cmdChar = await service.getCharacteristic(BLE_CMD);
   const tempChar = await service.getCharacteristic(BLE_TEMP);
   const statusChar = await service.getCharacteristic(BLE_STATUS);
 
   const onGattDisconnected = () => {
-    handlers.onDisconnect && handlers.onDisconnect();
+    if (handlers.onDisconnect) handlers.onDisconnect();
   };
   device.addEventListener("gattserverdisconnected", onGattDisconnected);
 
-  // Temperature notifications (float32 little-endian)
   const onTemp = (event) => {
     const value = event.target.value;
     if (!value || value.byteLength < 4) return;
     const t = value.getFloat32(0, true);
-    if (Number.isFinite(t)) handlers.onTemperature && handlers.onTemperature(t);
+    if (Number.isFinite(t) && handlers.onTemperature) handlers.onTemperature(t);
   };
-  await tempChar.startNotifications();
-  tempChar.addEventListener("characteristicvaluechanged", onTemp);
 
-  // Initial reads
+  const handleStatusBuffer = (value) => {
+    if (!value) return;
+    const text = new TextDecoder("utf-8").decode(value.buffer || value);
+    if (handlers.onStatus) handlers.onStatus(text);
+    const parsed = parseStatusText(text);
+    if (parsed.extraHeat != null && handlers.onExtraHeat) {
+      handlers.onExtraHeat(parsed.extraHeat);
+    }
+  };
+
+  const onStatus = (event) => handleStatusBuffer(event.target.value);
+
+  try {
+    await tempChar.startNotifications();
+    tempChar.addEventListener("characteristicvaluechanged", onTemp);
+  } catch (_) {}
+
+  try {
+    await statusChar.startNotifications();
+    statusChar.addEventListener("characteristicvaluechanged", onStatus);
+  } catch (_) {}
+
   try {
     const tv = await tempChar.readValue();
     if (tv.byteLength >= 4) {
       const t = tv.getFloat32(0, true);
-      if (Number.isFinite(t)) handlers.onTemperature && handlers.onTemperature(t);
+      if (Number.isFinite(t) && handlers.onTemperature) handlers.onTemperature(t);
     }
-  } catch (_) {
-    /* ignore */
-  }
+  } catch (_) {}
 
   try {
     const sv = await statusChar.readValue();
-    const text = new TextDecoder().decode(sv.buffer);
-    handlers.onStatus && handlers.onStatus(text);
-  } catch (_) {
-    /* ignore */
-  }
+    handleStatusBuffer(sv);
+  } catch (_) {}
+
+  const pollTimer = setInterval(async () => {
+    if (!device.gatt?.connected) return;
+    try {
+      const sv = await statusChar.readValue();
+      handleStatusBuffer(sv);
+    } catch (_) {}
+    try {
+      const tv = await tempChar.readValue();
+      if (tv.byteLength >= 4) {
+        const t = tv.getFloat32(0, true);
+        if (Number.isFinite(t) && handlers.onTemperature) {
+          handlers.onTemperature(t);
+        }
+      }
+    } catch (_) {}
+  }, 500);
 
   async function sendLevels({ n = 0, m = 0, c = 0, h = 0 }) {
     if (!device.gatt?.connected) throw new Error("Not connected");
@@ -73,7 +157,6 @@ export async function connectArduino(handlers = {}) {
     const mm = clampLevel(m);
     const cc = clampLevel(c);
     const hh = clampLevel(h);
-    // ASCII "N,M,C,H" — easy to debug on Serial Monitor
     const text = `${nn},${mm},${cc},${hh}`;
     const data = new TextEncoder().encode(text);
     if (cmdChar.properties.writeWithoutResponse) {
@@ -95,11 +178,11 @@ export async function connectArduino(handlers = {}) {
   }
 
   function disconnect() {
+    clearInterval(pollTimer);
     try {
       tempChar.removeEventListener("characteristicvaluechanged", onTemp);
-    } catch (_) {
-      /* ignore */
-    }
+      statusChar.removeEventListener("characteristicvaluechanged", onStatus);
+    } catch (_) {}
     device.removeEventListener("gattserverdisconnected", onGattDisconnected);
     if (device.gatt?.connected) device.gatt.disconnect();
   }

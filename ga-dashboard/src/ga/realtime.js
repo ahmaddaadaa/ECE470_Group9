@@ -1,12 +1,9 @@
-// Live mode: advance red (no control) and green (GA) one step per second.
-
 import {
   applyStep,
   zeroAction,
   heatAt,
-  TARGET,
-  SAFE_LOW,
-  SAFE_HIGH
+  stepCost,
+  TARGET
 } from "./model";
 import { formatBits } from "./chromosome";
 import { runGAOneStep } from "./gaEngine";
@@ -15,18 +12,18 @@ function round3(x) {
   return Math.round(x * 1000) / 1000;
 }
 
-export function playLive(scenario, _schedule, opts = {}) {
+export function playLive(scenario, opts = {}) {
   const {
     delayMs = 1000,
     onStep,
     onDone,
     onQueue,
     resume = null,
+    getExtraHeat = null,
     gaOpts = { populationSize: 48, generations: 32, topK: 12 }
   } = opts;
 
   let queued = null;
-  let sticky = false;
   let stop = false;
 
   let t = resume?.t ?? 0;
@@ -38,6 +35,12 @@ export function playLive(scenario, _schedule, opts = {}) {
     : [scenario.T0];
   const log = resume?.log ? [...resume.log] : [];
 
+  let lastCmd = null;
+  let lastRanked = resume?.ranked || null;
+  let lastFitness = null;
+  let lastHeatForGa = null;
+  let lastTForGa = null;
+
   const points = () => {
     const n = Math.max(temps.length, openTemps.length);
     return Array.from({ length: n }, (_, i) => ({
@@ -48,13 +51,13 @@ export function playLive(scenario, _schedule, opts = {}) {
   };
 
   const emitQueue = () =>
-    onQueue && onQueue({ nextStep: t, queuedHeat: queued, sticky });
+    onQueue && onQueue({ nextStep: t, queuedHeat: queued });
 
-  onStep &&
+  if (onStep) {
     onStep({
       points: points(),
       log: [...log],
-      ranked: resume?.ranked || null,
+      ranked: lastRanked,
       rankingStep: resume?.rankingStep ?? null,
       continuous: {
         t,
@@ -63,14 +66,26 @@ export function playLive(scenario, _schedule, opts = {}) {
         temps: [...temps],
         openTemps: [...openTemps],
         log: [...log]
-      },
-      status: `Live · red (no control) vs green (GA) · target ${TARGET} C`
+      }
     });
+  }
   emitQueue();
+
+  function isStable(Tnow, heat) {
+    return (
+      lastCmd != null &&
+      Math.abs(Tnow - TARGET) < 0.35 &&
+      Math.abs(heat) < 0.35 &&
+      lastTForGa != null &&
+      Math.abs(Tnow - lastTForGa) < 0.25 &&
+      lastHeatForGa != null &&
+      Math.abs(heat - lastHeatForGa) < 0.2
+    );
+  }
 
   function tick() {
     if (stop) {
-      onDone &&
+      if (onDone) {
         onDone({
           points: points(),
           log: [...log],
@@ -84,17 +99,47 @@ export function playLive(scenario, _schedule, opts = {}) {
             log: [...log]
           }
         });
+      }
       return;
     }
 
     const base = heatAt(scenario, t);
-    const inject = queued != null && Number.isFinite(queued) ? Number(queued) : 0;
+    let extra = 0;
+    if (typeof getExtraHeat === "function") {
+      const e = Number(getExtraHeat());
+      if (Number.isFinite(e)) extra = e;
+    }
+    const queuedHeat =
+      queued != null && Number.isFinite(queued) ? Number(queued) : 0;
+    const inject = extra + queuedHeat;
     const heat = base + inject;
-    if (!sticky) queued = null;
+    queued = null;
     emitQueue();
 
-    const ga = runGAOneStep(T, heat, gaOpts);
-    const cmd = ga.bestAction;
+    let cmd;
+    let fitness;
+    let ranked;
+    let reused = false;
+
+    if (isStable(T, heat)) {
+      cmd = lastCmd;
+      fitness = lastFitness;
+      ranked = lastRanked;
+      reused = true;
+    } else {
+      const ga = runGAOneStep(T, heat, gaOpts);
+      cmd = ga.bestAction;
+      fitness = ga.fitness;
+      ranked = (ga.ranked || []).map((r) => ({
+        ...r,
+        temperature: r.temperature ?? r.nextT
+      }));
+      lastCmd = cmd;
+      lastFitness = fitness;
+      lastRanked = ranked;
+      lastHeatForGa = heat;
+      lastTForGa = T;
+    }
 
     const openOut = applyStep(Topen, zeroAction(), heat);
     const gaOut = applyStep(T, cmd, heat);
@@ -102,6 +147,10 @@ export function playLive(scenario, _schedule, opts = {}) {
     T = gaOut.T;
     openTemps.push(Topen);
     temps.push(T);
+
+    const cost = reused
+      ? stepCost(cmd.n, cmd.m, cmd.c, cmd.h)
+      : gaOut.stepCost;
 
     log.push({
       t,
@@ -123,24 +172,17 @@ export function playLive(scenario, _schedule, opts = {}) {
         cooling: gaOut.applied.c,
         heating: gaOut.applied.h
       },
-      stepCost: round3(gaOut.stepCost),
+      stepCost: round3(cost),
       injectedDisturbance: round3(inject),
-      stepFitness: ga.fitness
+      stepFitness: fitness,
+      gaReused: reused
     });
 
-    const band =
-      T >= SAFE_LOW && T <= SAFE_HIGH ? "IN safe band" : "outside safe band";
-
-    const ranked = (ga.ranked || []).map((r) => ({
-      ...r,
-      temperature: r.temperature ?? r.nextT
-    }));
-
-    onStep &&
+    if (onStep) {
       onStep({
         points: points(),
         log: [...log],
-        ranked,
+        ranked: ranked || lastRanked,
         rankingStep: t,
         continuous: {
           t: t + 1,
@@ -149,11 +191,11 @@ export function playLive(scenario, _schedule, opts = {}) {
           temps: [...temps],
           openTemps: [...openTemps],
           log: [...log],
-          ranked,
+          ranked: ranked || lastRanked,
           rankingStep: t
-        },
-        status: `t=${t}s · red ${Topen.toFixed(2)} C · green ${T.toFixed(2)} C · ${formatBits(cmd.n, cmd.m, cmd.c, cmd.h)} · ${band}`
+        }
       });
+    }
 
     t += 1;
     setTimeout(tick, delayMs);
@@ -165,19 +207,13 @@ export function playLive(scenario, _schedule, opts = {}) {
     cancel: () => {
       stop = true;
     },
-    queueNextDisturbance: (v, o = {}) => {
+    queueNextDisturbance: (v) => {
       queued = Number(v);
-      if (o.sticky != null) sticky = !!o.sticky;
       emitQueue();
-      return { nextStep: t, queuedHeat: queued, sticky };
-    },
-    setSticky: (v) => {
-      sticky = !!v;
-      emitQueue();
+      return { nextStep: t, queuedHeat: queued };
     },
     clearQueue: () => {
       queued = null;
-      sticky = false;
       emitQueue();
     },
     getContinuous: () => ({
