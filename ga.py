@@ -108,8 +108,72 @@ def hill_climbing(current_temp):
         current_score = best_neighbour_score
 
 
+#GA
+
+# score every chromosomes in the population adds them to a list with there score repesnting there weights so GA can know which chormosmoes are good
+def get_weights(population, current_temp):
+    weights = []
+    for chromosome in population:
+        final_temp = simulate_temperature(chromosome, current_temp)
+        score = calculate_fitness(chromosome, final_temp)
+        weights.append(score)
+    return weights
 
 
+# due to fitness function some score can be negative take the lowest shiftes it up along with everything to remove negative
+# then randomly chooses two parent with (higher weight mean more likely to be choosen)
+def weighted_random_choices(population, weights):
+    min_weight = min(weights)
+    shifted = [w - min_weight + 1 for w in weights]  # +1 so worst still has a small chance
+
+    parent1 = random.choices(population, weights=shifted, k=1)[0]
+    parent2 = random.choices(population, weights=shifted, k=1)[0]
+    return parent1, parent2
+
+
+#randomly cuts both parent and creates a new child out of the front of parent one and back of parent 2
+def crossover(parent1, parent2):
+    split = random.randint(1, 11)              
+    child = parent1[:split] + parent2[split:]  
+    return child
+
+# take the child and if mutate is called flips one of the bit in the chromosome randomly
+def mutate(child):
+    i = random.randint(0, 11)
+    child[i] = 1 - child[i]
+    return child
+
+def genetic_algorithm(current_temp, population_size=20, generations=50, mutation_rate=0.1):
+    # random population of size 20 for now
+    population = []
+    for _ in range(population_size):
+        population.append(create_chromosome())
+
+
+    # repeats for a number of generations get the weights (based on score) of the wcurrent loops population 
+    for generation in range(generations):
+        weights = get_weights(population, current_temp)   
+        
+
+        # bulk of the ga for the population size calls all of the helper fuction above 
+        population2 = []
+        for _ in range(population_size):
+            # randomly selects 2 parent based on the weights
+            parent1, parent2 = weighted_random_choices(population, weights)
+            #perfomed the cross over
+            child = crossover(parent1, parent2)
+            #randopmly runs muation sometimes
+            if random.random() < mutation_rate:
+                child = mutate(child)
+            population2.append(child)
+        #make this the new population fo rthe next loop
+        population = population2
+    
+    #after ga done return the best chromosome
+    weights = get_weights(population, current_temp)
+    best_index = weights.index(max(weights))
+    best_chrom = population[best_index]
+    return best_chrom, weights[best_index]
 
 #test based on 42 degree temp
 if __name__ == "__main__":
@@ -152,3 +216,10 @@ if __name__ == "__main__":
     print("Best Final Temp:", round(hc_temp, 2), "°C")
     print("Best Fitness Score:", round(hc_score, 2))
 
+    # genetic algorithm
+    print("\nGenetic Algorithm")
+    ga_chrom, ga_score = genetic_algorithm(current_temp)
+    ga_temp = simulate_temperature(ga_chrom, current_temp)
+    print("Best GA Chromosome:", ga_chrom)
+    print("Best Final Temp:", round(ga_temp, 2), "°C")
+    print("Best Fitness Score:", round(ga_score, 2))
