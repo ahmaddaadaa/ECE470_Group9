@@ -1,26 +1,14 @@
-import "../styles/Header.css";
-
-function Header() {
+export default function Header() {
   return (
-    <div className="header">
-
-      <h1>
-        ECE 470 - Group 9
-      </h1>
-
-      <h2>
-        Genetic Algorithm Optimization of a Temperature Controlled Cell Culture Process
-      </h2>
-
-      <p className="header-description">
-        This dashboard demonstrates our proposed approach for maintaining
-        stable reactor temperatures using Genetic Algorithms. The current
-        version uses sample data to illustrate the project concept while
-        the optimization algorithm is being developed.
+    <header className="header">
+      <div className="header-titles">
+        <h1>ECE 470 - Group 9</h1>
+        <h2>GA Temperature Control</h2>
+      </div>
+      <p className="header-blurb">
+        Red = no control · Green = GA recovery · chromosomes levels 0–7
+        (000–111) · safe band 35–39 C · target 37 C
       </p>
-
-    </div>
+    </header>
   );
 }
-
-export default Header;
