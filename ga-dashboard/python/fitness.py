@@ -1,5 +1,3 @@
-"""Fitness for hybrid schedule chromosome on a chosen scenario (or multi)."""
-
 from __future__ import annotations
 
 from typing import Dict, List, Sequence, Tuple

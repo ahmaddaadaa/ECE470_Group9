@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-"""CLI: apply disturbance dataset + run GA on a chosen scenario, write JSON."""
-
 from __future__ import annotations
 
 import argparse
@@ -55,13 +53,13 @@ def build_results_payload(scenario: dict, ga_result: dict, dataset_meta: dict) -
     return {
         "meta": {
             "generatedAt": datetime.now(timezone.utc).isoformat(),
-            "mode": "hybrid_schedule",
+            "mode": "schedule",
             "scenarioId": scenario["id"],
             "disturbanceScale": scale,
             "population": ga_result["config"]["population"],
             "generations": ga_result["config"]["generations"],
             "horizon": dataset_meta.get("horizon", 8),
-            "controller": "open_loop_schedule_with_slew",
+            "controller": "open_loop",
             "slew": SLEW,
             "weights": WEIGHTS,
             "costRates": {**COST_RATES, "overlapTaxBeta": OVERLAP_TAX_BETA},

@@ -1,5 +1,3 @@
-"""Genetic algorithm for hybrid 96-bit action schedules."""
-
 from __future__ import annotations
 
 from typing import Dict, List, Optional
@@ -26,7 +24,6 @@ def tournament_select(pop, fits, rng, k=3):
 def crossover(a, b, rng, rate=0.85):
     if rng.random() > rate:
         return a.copy(), b.copy()
-    # Prefer cuts on timestep boundaries
     boundaries = list(range(BITS_PER_STEP, CHROMOSOME_BITS, BITS_PER_STEP))
     if len(boundaries) >= 2 and rng.random() < 0.7:
         p1, p2 = sorted(rng.choice(boundaries, size=2, replace=False))
@@ -48,15 +45,11 @@ def mutate(bits, rng, rate=0.025):
 
 
 def seeded_cooling_bias(rng: np.random.Generator) -> np.ndarray:
-    """Individual that tends to cool/mix under disturbance (helps search)."""
     bits = zero_chromosome()
-    # For mid timesteps, set moderate cooling + mixing commands
     for t in range(HORIZON):
         base = t * BITS_PER_STEP
-        # nutrients 000, mixing ~010-100, cooling ~011-110, heating 000
         mix = int(rng.integers(2, 5))
         cool = int(rng.integers(3, 7)) if 1 <= t <= 5 else int(rng.integers(1, 4))
-        # write 3-bit fields
         for i, val in enumerate(
             [
                 0,  # N
@@ -69,7 +62,6 @@ def seeded_cooling_bias(rng: np.random.Generator) -> np.ndarray:
                 [(val >> (2 - j)) & 1 for j in range(3)]
             ):
                 bits[base + i * 3 + b_i] = b
-    # light noise
     flip = rng.random(CHROMOSOME_BITS) < 0.04
     bits[flip] = 1 - bits[flip]
     return repair_bits(bits)

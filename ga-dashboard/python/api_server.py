@@ -1,15 +1,5 @@
 #!/usr/bin/env python3
-"""
-Local API for the hybrid GA dashboard.
-
-  python3 api_server.py
-  → http://127.0.0.1:8000
-
-Endpoints:
-  GET  /api/health
-  POST /api/apply-disturbance  { disturbanceScale, numScenarios, seed }
-  POST /api/run-ga             { scenarioId, dataset?, population, generations, seed }
-"""
+# Local API: python3 api_server.py  ->  http://127.0.0.1:8000
 
 from __future__ import annotations
 
@@ -25,7 +15,6 @@ from ga import run_ga_for_scenario
 HOST = "127.0.0.1"
 PORT = 8000
 
-# In-memory session state
 STATE = {
     "dataset": None,
 }
@@ -72,7 +61,7 @@ class Handler(BaseHTTPRequestHandler):
                 200,
                 {
                     "ok": True,
-                    "service": "hybrid-ga-api",
+                    "service": "ga-api",
                     "hasDataset": STATE["dataset"] is not None,
                 },
             )
@@ -125,7 +114,6 @@ class Handler(BaseHTTPRequestHandler):
                     _json_response(self, 404, {"error": f"Scenario {sid} not found"})
                     return
 
-                # Ensure scale is on scenario
                 if "disturbanceScale" not in scenario:
                     scenario = {
                         **scenario,

@@ -1,13 +1,4 @@
-"""
-Hybrid chromosome: open-loop schedule of 4 actions × 3 bits × T steps.
-
-Per timestep (12 bits):
-  [ Nutrients (3) | Mixing (3) | Cooling (3) | Heating (3) ]
-  000 = do nothing … 111 = max (levels 0–7)
-
-Full chromosome (T=8): 96 bits.
-Heating and cooling may both be nonzero (simultaneous use allowed).
-"""
+# 96-bit schedule: 8 steps x 12 bits (N M C H, 3 bits each, levels 0-7)
 
 from __future__ import annotations
 
@@ -32,7 +23,6 @@ class ActionStep:
     mixing: int
     cooling: int
     heating: int
-    # applied after slew limits (filled by simulator)
     nutrients_applied: int = 0
     mixing_applied: int = 0
     cooling_applied: int = 0
@@ -43,7 +33,7 @@ class ActionStep:
 class DecodedChromosome:
     binary: str
     binary_grouped: str
-    commands: List[ActionStep]  # raw gene targets 0–7
+    commands: List[ActionStep]
 
 
 def _bits_to_int(bits: np.ndarray) -> int:
@@ -59,7 +49,6 @@ def _int_to_bits(value: int, width: int) -> List[int]:
 
 
 def repair_bits(bits: np.ndarray) -> np.ndarray:
-    """No H/C ban — both allowed. Keep as int8 vector of correct length."""
     b = np.asarray(bits, dtype=np.int8).copy()
     if b.size != CHROMOSOME_BITS:
         raise ValueError(f"expected {CHROMOSOME_BITS} bits, got {b.size}")

@@ -1,31 +1,18 @@
-# Simple student workflow
+# Python offline GA
 
-## 1. Generate results (Python, once)
+Optional. The React dashboard already runs the GA in the browser.
 
 ```bash
 cd ga-dashboard/python
 pip install -r requirements.txt
-python3 run_ga.py
+python3 run_ga.py --disturbance 1.0 --population 70 --generations 100
 ```
 
-This writes:
+Writes JSON under `../public/data/`.
 
-- `../public/data/ga_results.json`  ← used by the dashboard
-- `../public/data/dataset.json`
-
-## 2. View dashboard (React)
+Optional local API:
 
 ```bash
-cd ga-dashboard
-npm start
+python3 api_server.py
+# http://127.0.0.1:8000
 ```
-
-Open the URL shown (often `http://localhost:3000/ECE470_Group9`).
-
-## What the UI does
-
-1. Loads `ga_results.json`
-2. **Show Disturbed Data** — red curve (no control)
-3. **Run Optimization** — green curve (GA schedule) + panels
-
-No API server is required for the demo.

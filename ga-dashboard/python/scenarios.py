@@ -1,5 +1,3 @@
-"""Disturbance dataset generation for hybrid GA demo."""
-
 from __future__ import annotations
 
 from typing import Dict, List
@@ -14,8 +12,6 @@ SAFE_HIGH = 39.0
 
 
 def base_disturbance_profile(rng: np.random.Generator | None = None) -> List[float]:
-    """Canonical heat-pulse shape (scaled later by D)."""
-    # Strong mid-horizon heat load — easy to visualize
     return [0.0, 0.8, 1.2, 1.0, 0.6, 0.3, 0.1, 0.0]
 
 
@@ -24,9 +20,6 @@ def generate_disturbed_dataset(
     disturbance_scale: float = 1.0,
     seed: int = 42,
 ) -> Dict:
-    """
-    Apply disturbance to all scenarios and compute baseline (no-control) trajectories.
-    """
     rng = np.random.default_rng(seed)
     base_d = np.array(base_disturbance_profile(), dtype=float)
     scenarios = []
@@ -40,7 +33,6 @@ def generate_disturbed_dataset(
         else:
             t0 = float(rng.uniform(35.8, 36.8))
 
-        # Per-scenario variation on the shared pulse
         scale_jitter = float(rng.uniform(0.85, 1.15))
         disturbance = (base_d * scale_jitter).tolist()
         noise = rng.normal(0.0, 0.06, size=HORIZON).tolist()
@@ -67,7 +59,6 @@ def generate_disturbed_dataset(
             }
         )
 
-    # Force a clean demo row at index 0
     d0 = base_d.tolist()
     n0 = [0.0] * HORIZON
     t0 = 37.0

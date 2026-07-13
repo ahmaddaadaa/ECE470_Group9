@@ -1,13 +1,4 @@
-"""
-Temperature plant model with simultaneous heating/cooling and slew rates.
-
-ΔT = wN*N + wH*H - wC*C - wM*M + D*d + noise
-
-Slew limits (applied levels cannot jump faster than S per step):
-  Cooling: S_C = 3 (fast)
-  Heating: S_H = 1 (slow)
-  Nutrients / Mixing: S = 2
-"""
+# Plant: dT = wN*N + wH*H - wC*C - wM*M + heat, with slew limits
 
 from __future__ import annotations
 
@@ -17,7 +8,6 @@ import numpy as np
 
 from chromosome import HORIZON, ActionStep, DecodedChromosome
 
-# Fixed model weights (°C per level)
 WEIGHTS = {
     "wN": 0.20,
     "wM": 0.12,
@@ -25,22 +15,20 @@ WEIGHTS = {
     "wH": 0.30,
 }
 
-# Max |level change| per timestep
 SLEW = {
     "nutrients": 2,
     "mixing": 2,
-    "cooling": 3,  # faster
-    "heating": 1,  # slower
+    "cooling": 3,
+    "heating": 1,
 }
 
-# Cost per level (applied)
 COST_RATES = {
     "nutrients": 0.50,
     "mixing": 0.40,
     "cooling": 1.00,
     "heating": 0.90,
 }
-OVERLAP_TAX_BETA = 0.50  # extra cost per min(C,H) level
+OVERLAP_TAX_BETA = 0.50
 
 
 def _slew_toward(current: int, target: int, max_step: int) -> int:
@@ -55,7 +43,6 @@ def _slew_toward(current: int, target: int, max_step: int) -> int:
 def apply_slew(
     commands: List[ActionStep],
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, List[ActionStep]]:
-    """Convert command levels to applied levels with per-actuator slew limits."""
     n_app = np.zeros(HORIZON, dtype=int)
     m_app = np.zeros(HORIZON, dtype=int)
     c_app = np.zeros(HORIZON, dtype=int)
@@ -126,7 +113,6 @@ def simulate_temperature(
     disturbance_scale: float = 1.0,
     weights: Optional[Dict[str, float]] = None,
 ) -> np.ndarray:
-    """Returns temps length HORIZON+1 (includes T0)."""
     w = weights or WEIGHTS
     n = np.asarray(nutrients, dtype=float)
     m = np.asarray(mixing, dtype=float)
