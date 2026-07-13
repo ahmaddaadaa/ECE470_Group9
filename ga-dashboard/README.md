@@ -108,8 +108,8 @@ Target **37 °C**, safe band **35–39 °C**. Fitness scores how close you are t
 ga-dashboard/
 ├── src/
 │   ├── App.js
-│   ├── components/     chart, tables, BLE bar, …
-│   ├── ga/             browser GA (model, chromosome, engine, live)
+│   ├── components/     chart, tables, BLE bar
+│   ├── ga/             browser GA
 │   ├── ble/            Web Bluetooth client
 │   └── styles/
 ├── arduino/            MKR WIFI 1010 sketch + notes
@@ -146,7 +146,4 @@ ga-dashboard/
 
 ## Group
 
-ECE 470 – Group 9.  
-Main work is on the chromosome / dashboard branch under this package.
-
-Academic use for the course. Dependencies: `package.json` and `python/requirements.txt`.
+ECE 470 Group 9.
