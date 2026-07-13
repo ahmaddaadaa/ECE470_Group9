@@ -37,7 +37,7 @@ export function parseStatusText(text) {
 export async function connectArduino(handlers = {}) {
   if (!bleSupported()) {
     throw new Error(
-      "Web Bluetooth not available. Use Google Chrome on http://localhost (not Safari)."
+      "Web Bluetooth needs Chrome (or Edge)."
     );
   }
 
