@@ -4,13 +4,8 @@ function rand(a, b) {
   return a + Math.random() * (b - a);
 }
 
-/**
- * Disturbance: start near 37 C, then a heat pulse that would drive T
- * out of the safe band if not controlled.
- */
 export function createRandomScenario(D = 1.2) {
   const T0 = Math.round(rand(36.8, 37.2) * 1000) / 1000;
-  // Strong multi-step heat pulse (clear spike on the single chart line)
   const peak = rand(1.3, 2.0);
   const shape = [0.2, 1.0, 1.5, 1.35, 1.0, 0.65, 0.35, 0.15, 0.05, 0];
   const disturbance = shape.map(
@@ -29,7 +24,6 @@ export function createRandomScenario(D = 1.2) {
     disturbanceScale: Number(D)
   };
 
-  // Uncontrolled path (for stats only — chart uses controlled recovery)
   const { temps } = simulate(zeroSchedule(HORIZON), scenario);
   return {
     scenario,

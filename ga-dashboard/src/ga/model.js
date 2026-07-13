@@ -1,11 +1,8 @@
-// Temperature plant: N,H raise T; M,C lower T. Levels 0-7.
-
 export const HORIZON = 10;
 export const TARGET = 37;
 export const SAFE_LOW = 35;
 export const SAFE_HIGH = 39;
 
-// degrees C change per control level
 export const WEIGHTS = {
   wN: 0.2,
   wM: 0.28,
@@ -35,9 +32,8 @@ export function applyStep(T, action, heat) {
   const c = clamp(action.c | 0, 0, 7);
   const h = clamp(action.h | 0, 0, 7);
   const dCtrl = controlDelta(n, m, c, h);
-  const Tnext = T + dCtrl + heat;
   return {
-    T: Tnext,
+    T: T + dCtrl + heat,
     applied: { n, m, c, h },
     controlDelta: dCtrl,
     stepCost: stepCost(n, m, c, h)
@@ -46,6 +42,15 @@ export function applyStep(T, action, heat) {
 
 export function zeroAction() {
   return { n: 0, m: 0, c: 0, h: 0 };
+}
+
+export function heatAt(scenario, t) {
+  const scale = scenario.disturbanceScale || 0;
+  const len = scenario.disturbance?.length || HORIZON;
+  if (t >= 0 && t < len) {
+    return scale * (scenario.disturbance[t] || 0) + (scenario.noise[t] || 0);
+  }
+  return 0;
 }
 
 export function simulate(schedule, scenario) {
@@ -82,14 +87,4 @@ export function toPoints(temps) {
     time,
     temperature: Math.round(temperature * 1000) / 1000
   }));
-}
-
-// Disturbance heat for step t (pulse over the horizon, then 0)
-export function heatAt(scenario, t) {
-  const scale = scenario.disturbanceScale || 0;
-  const len = scenario.disturbance?.length || HORIZON;
-  if (t >= 0 && t < len) {
-    return scale * (scenario.disturbance[t] || 0) + (scenario.noise[t] || 0);
-  }
-  return 0;
 }

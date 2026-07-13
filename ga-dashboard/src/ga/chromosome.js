@@ -1,5 +1,3 @@
-// 12-bit chromosome for one step: [N M C H], 3 bits each (levels 0-7)
-
 export const CHROMOSOME_BITS = 12;
 
 function bitsToInt(bits, start, len) {
@@ -59,14 +57,9 @@ export function formatChromosome(bits) {
   return formatBits(a.n, a.m, a.c, a.h);
 }
 
-/**
- * Force full 0–7 coverage for every gene in the seed bank,
- * so ranking/search sees lots of variation (000 through 111).
- */
 export function diverseSeedPopulation(count) {
   const seeds = [];
 
-  // Every level 0–7 for each single actuator (clear 000…111 coverage)
   for (let k = 0; k <= 7; k += 1) {
     seeds.push(encodeAction({ n: 0, m: 0, c: k, h: 0 }));
     seeds.push(encodeAction({ n: 0, m: 0, c: 0, h: k }));
@@ -74,7 +67,6 @@ export function diverseSeedPopulation(count) {
     seeds.push(encodeAction({ n: 0, m: k, c: 0, h: 0 }));
   }
 
-  // Pairs across low/mid/high so mixed levels appear
   for (let k = 0; k <= 7; k += 1) {
     seeds.push(encodeAction({ n: 0, m: k, c: k, h: 0 }));
     seeds.push(encodeAction({ n: k, m: 0, c: 0, h: k }));
@@ -83,7 +75,6 @@ export function diverseSeedPopulation(count) {
     seeds.push(encodeAction({ n: 7 - k, m: k, c: Math.floor(k / 2), h: 0 }));
   }
 
-  // Grid samples so all levels show up in combinations
   for (let c = 0; c <= 7; c += 2) {
     for (let h = 0; h <= 7; h += 2) {
       seeds.push(
@@ -106,7 +97,6 @@ export function diverseSeedPopulation(count) {
   return seeds.slice(0, count);
 }
 
-/** Crossover: swap whole 3-bit genes (N/M/C/H) between parents. */
 export function crossover(a, b) {
   if (Math.random() > 0.85) return [a.slice(), b.slice()];
   const c1 = a.slice();
@@ -124,10 +114,6 @@ export function crossover(a, b) {
   return [c1, c2];
 }
 
-/**
- * Mutation: rewrite a gene to any level 0–7 (000…111) + bit flips.
- * High enough rate to keep all levels alive in the population.
- */
 export function mutate(bits, rate = 0.28) {
   const out = bits.slice();
   for (let f = 0; f < 4; f += 1) {

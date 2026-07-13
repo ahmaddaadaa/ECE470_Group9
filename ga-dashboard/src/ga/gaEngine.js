@@ -1,5 +1,3 @@
-// Genetic algorithm for one 12-bit control decision per time step.
-
 import {
   diverseSeedPopulation,
   decodeAction,
@@ -103,10 +101,6 @@ function rankTopK(evals, topK) {
   return ranked;
 }
 
-/**
- * Search best 12-bit chromosome for this step.
- * Seeds + mutation keep all levels 0–7 in play.
- */
 export function runGAOneStep(Tnow, heat, opts = {}) {
   const popSize = opts.populationSize || 64;
   const gens = opts.generations || 45;
@@ -146,7 +140,6 @@ export function runGAOneStep(Tnow, heat, opts = {}) {
       next.push(mutate(c1, rate));
       if (next.length < popSize - immigrants) next.push(mutate(c2, rate));
     }
-    // Fresh random + full-level seeds keep 000…111 present
     while (next.length < popSize) {
       next.push(Math.random() < 0.5 ? randomBits() : diverseSeedPopulation(1)[0]);
     }
@@ -174,12 +167,6 @@ export function runGAOneStep(Tnow, heat, opts = {}) {
   };
 }
 
-/**
- * Dual trajectories from the same disturbance:
- *   red  = original (no control)
- *   green = GA-optimized recovery into the safe band
- * Table keeps one fixed temperature value per curve per step.
- */
 export function runGA(scenario, opts = {}) {
   const steps = opts.horizon || HORIZON;
   const openSim = simulate(zeroSchedule(steps), scenario);
@@ -208,12 +195,10 @@ export function runGA(scenario, opts = {}) {
       rankAt = { T, heat, t, abs: Math.abs(heat) };
     }
 
-    // Red: same heat, no control
     const open = applyStep(Topen, zeroAction(), heat);
     Topen = open.T;
     openChain.push(Topen);
 
-    // Green: best chromosome this step
     const closed = applyStep(T, action, heat);
     T = closed.T;
     temps.push(T);
@@ -277,7 +262,6 @@ export function runGA(scenario, opts = {}) {
       generations: opts.generations || 45,
       horizon: steps,
       chromosomeBits: CHROMOSOME_BITS,
-      design: "dual curves: red no-control, green GA recovery",
       rankingStep: rankAt.t
     },
     bestChromosome: { actions },
@@ -285,7 +269,6 @@ export function runGA(scenario, opts = {}) {
     fitness: {
       aggregate: round3(lastFit),
       breakdown: {
-        note: "Green recovers to 35–39 C; red shows same disturbance without control.",
         rankingStep: rankAt.t,
         lastStepFitness: round3(lastFit),
         exampleChromosome: ranked[0]?.bits
