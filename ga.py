@@ -43,7 +43,7 @@ def calculate_fitness(chromosome, final_temp):
     penalty = 0
     if final_temp < 35 or final_temp > 39:
         penalty = 100
-    Benefit = 100 / (abs(37 - final_temp) + 1)
+    Benefit = 100 / (abs(37 - final_temp) + 1) #inverse fitness function scaled to 100
     
     return Benefit - penalty - cost
 
@@ -53,12 +53,19 @@ def exhastive_search(current_temp):
     best_chrom = None
     best_score = -9999
 
+    # loops though whole search space each loop make a chromosome based on the numbers (i)
+    
+
     for i in range(4096):
         chromosome = []
         for bit in format(i, '012b'):
             chromosome.append(int(bit))
+
+        # caluclates the tmep and score for the curent choromosome
         final_temp = simulate_temperature(chromosome, current_temp)
         new_score = calculate_fitness(chromosome, final_temp)
+
+        # finds the best score over all loops as only changes if the next score is larger than the previous socre
         if new_score > best_score:
             best_score = new_score
             best_chrom = chromosome
@@ -66,12 +73,40 @@ def exhastive_search(current_temp):
     return best_chrom, best_score
 
 
-#start of hill climbing just set up the starting point need to learn how to implement 
 
 def hill_climbing(current_temp):
+    #sets first chromosme 
     current_chrom = create_chromosome()
     final_temp = simulate_temperature(current_chrom, current_temp)
     current_score = calculate_fitness(current_chrom, final_temp)
+
+    # take that chrom flipes on bit at a time (flips the 0th bit only, first bit only etc) if the next 
+    # alteration had a greater score than the previous one new best neighbour.
+    # end result the final best neighbour will be the flip that gives the highest score
+    while True:
+        best_neighbour = current_chrom
+        best_neighbour_score = current_score
+        for i in range(12):
+            candidate = current_chrom.copy()
+            candidate[i] = 1 - candidate[i]
+            candidate_temp = simulate_temperature(candidate, current_temp)
+            candidate_score = calculate_fitness(candidate, candidate_temp)
+            if candidate_score > best_neighbour_score:
+                best_neighbour_score = candidate_score
+                best_neighbour = candidate
+
+
+        # exit function: if at the end of the above for loop the all the flip dont improve the score we can leave as we are at "the top of the hill"
+        #  < is there for the noise edge case 
+        if best_neighbour_score <= current_score:
+            return current_chrom, current_score
+        
+
+
+        # set the best neighbour from above fopr loop to the new current chromsome so it can be fliped one at a time to find a better score
+        current_chrom = best_neighbour
+        current_score = best_neighbour_score
+
 
 
 
@@ -102,8 +137,18 @@ if __name__ == "__main__":
 
     #exhastive search 
     print("\nExhaustive Search")
-    best_chrom, best_score = exhastive_search(current_temp)
-    best_final_temp = simulate_temperature(best_chrom, current_temp)
-    print("Best Chromosome:", best_chrom)
-    print("Best Final Temp:", round(best_final_temp, 2), "°C")
-    print("Best Fitness Score:", round(best_score, 2))
+    exh_chrom, exh_score = exhastive_search(current_temp)
+    exh_temp = simulate_temperature(exh_chrom, current_temp)
+    print("Best exhastive search Chromosome:", exh_chrom)
+    print("Best Final Temp:", round(exh_temp, 2), "°C")
+    print("Best Fitness Score:", round(exh_score, 2))
+
+
+    #hill climbing
+    print("\nHill Climbing")
+    hc_chrom, hc_score = hill_climbing(current_temp)
+    hc_temp = simulate_temperature(hc_chrom, current_temp)
+    print("Best hill climbing Chromosome:", hc_chrom)
+    print("Best Final Temp:", round(hc_temp, 2), "°C")
+    print("Best Fitness Score:", round(hc_score, 2))
+
