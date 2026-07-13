@@ -1,5 +1,3 @@
-# Plant: dT = wN*N + wH*H - wC*C - wM*M + heat, with slew limits
-
 from __future__ import annotations
 
 from typing import Dict, List, Optional, Sequence, Tuple

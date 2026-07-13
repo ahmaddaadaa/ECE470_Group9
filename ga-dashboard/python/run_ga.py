@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,7 +27,11 @@ from scenarios import generate_disturbed_dataset
 
 def project_paths():
     here = Path(__file__).resolve().parent
-    data_dir = here.parent / "public" / "data"
+    # DATA_DIR is set in Docker; otherwise write under ga-dashboard/public/data
+    if os.environ.get("DATA_DIR"):
+        data_dir = Path(os.environ["DATA_DIR"])
+    else:
+        data_dir = here.parent / "public" / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
     return {
         "data_dir": data_dir,

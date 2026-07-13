@@ -1,9 +1,14 @@
 #!/usr/bin/env python3
-# Local API: python3 api_server.py  ->  http://127.0.0.1:8000
+# HTTP front for the Python GA (ga.py).
+#
+# Local:   python3 api_server.py  ->  http://127.0.0.1:8000
+# Docker:  same file; Dockerfile sets HOST=0.0.0.0 so the host can reach it.
+# Why: package the offline GA as a small service without changing the React app.
 
 from __future__ import annotations
 
 import json
+import os
 import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
@@ -12,8 +17,9 @@ from run_ga import build_results_payload, project_paths
 from scenarios import generate_disturbed_dataset
 from ga import run_ga_for_scenario
 
-HOST = "127.0.0.1"
-PORT = 8000
+# Docker / compose override these with env vars
+HOST = os.environ.get("HOST", "127.0.0.1")
+PORT = int(os.environ.get("PORT", "8000"))
 
 STATE = {
     "dataset": None,
@@ -148,14 +154,11 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     server = ThreadingHTTPServer((HOST, PORT), Handler)
-    print(f"Hybrid GA API listening on http://{HOST}:{PORT}")
-    print("  POST /api/apply-disturbance")
-    print("  POST /api/run-ga")
-    print("  GET  /api/health")
+    print(f"API on http://{HOST}:{PORT}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nShutting down.")
+        print("stopped")
         server.server_close()
 
 

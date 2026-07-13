@@ -1,5 +1,3 @@
-# 96-bit schedule: 8 steps x 12 bits (N M C H, 3 bits each, levels 0-7)
-
 from __future__ import annotations
 
 from dataclasses import dataclass

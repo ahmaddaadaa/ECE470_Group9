@@ -50,14 +50,7 @@ def seeded_cooling_bias(rng: np.random.Generator) -> np.ndarray:
         base = t * BITS_PER_STEP
         mix = int(rng.integers(2, 5))
         cool = int(rng.integers(3, 7)) if 1 <= t <= 5 else int(rng.integers(1, 4))
-        for i, val in enumerate(
-            [
-                0,  # N
-                mix,  # M
-                cool,  # C
-                0,  # H
-            ]
-        ):
+        for i, val in enumerate([0, mix, cool, 0]):
             for b_i, b in enumerate(
                 [(val >> (2 - j)) & 1 for j in range(3)]
             ):
