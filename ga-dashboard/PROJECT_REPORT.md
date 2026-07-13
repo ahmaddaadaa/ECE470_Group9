@@ -257,6 +257,25 @@ pip install -r requirements.txt
 python3 run_ga.py
 ```
 
+**Docker (optional packaging of the Python API)**
+
+We wrap the same Python GA in a container so anyone with Docker can start the API without installing Python packages by hand:
+
+```bash
+cd ga-dashboard/python
+docker compose up --build
+curl http://127.0.0.1:8000/api/health
+```
+
+| Why | Explanation |
+|-----|-------------|
+| Reproducible environment | Image uses `python:3.12-slim` + `requirements.txt` |
+| Easy demo on another PC | No “wrong Python version / missing NumPy” setup |
+| Isolated process | API runs only inside the container on port 8000 |
+| Same code as CLI | Container just runs `api_server.py`; algorithm is still `ga.py` |
+
+The React dashboard and GitHub Pages site do **not** depend on Docker. They use the browser GA. Docker is only for the Python offline/API path. See `python/Dockerfile` and `python/docker-compose.yml`.
+
 **Arduino**
 
 Upload `arduino/mkr_wifi1010_ble_control/mkr_wifi1010_ble_control.ino` (needs ArduinoBLE). See `arduino/README.md`.
@@ -265,8 +284,31 @@ Upload `arduino/mkr_wifi1010_ble_control/mkr_wifi1010_ble_control.ino` (needs Ar
 
 ## 12. Summary
 
-We use a genetic algorithm to keep a simulated reactor near 37 °C after a heat disturbance. Chromosomes encode nutrients, mixing, cooling, and heating at levels 0–7. Fitness rewards the safe band and beating “do nothing,” and penalizes error, cost, and extreme temperatures. The React app shows red vs green, ranks candidates, and can stream levels to an MKR WIFI 1010 over BLE. Python provides the same GA ideas offline for datasets and reports.
+We use a genetic algorithm to keep a simulated reactor near 37 °C after a heat disturbance. Chromosomes encode nutrients, mixing, cooling, and heating at levels 0–7. Fitness rewards the safe band and beating “do nothing,” and penalizes error, cost, and extreme temperatures. The React app shows red vs green, ranks candidates, and can stream levels to an MKR WIFI 1010 over BLE. Python provides the same GA ideas offline for datasets and reports. Optionally, that Python API can be started inside a Docker container for a portable, reproducible demo environment.
 
 ---
 
-*Matches the current `ga-dashboard` codebase (browser GA + Python offline + Arduino BLE sketch).*
+## 13. References
+
+[1] D. E. Goldberg, *Genetic Algorithms in Search, Optimization, and Machine Learning*. Addison-Wesley, 1989.  
+[2] M. Mitchell, *An Introduction to Genetic Algorithms*. MIT Press, 1996.  
+[3] DEAP (Distributed Evolutionary Algorithms in Python): https://github.com/DEAP/deap  
+[4] PyGAD: https://github.com/ahmedfgad/GeneticAlgorithmPython  
+[5] K. J. Åström and T. Hägglund, *PID Controllers: Theory, Design, and Tuning*, 2nd ed. ISA, 1995.  
+[6] Arduino PID Library: https://github.com/br3ttb/Arduino-PID-Library  
+[7] ArduinoBLE library: https://github.com/arduino-libraries/ArduinoBLE  
+[8] Arduino MKR WIFI 1010 documentation: https://docs.arduino.cc/hardware/mkr-wifi-1010  
+[9] MDN Web Bluetooth API: https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API  
+[10] Chrome Web Bluetooth samples: https://googlechrome.github.io/samples/web-bluetooth/  
+[11] React: https://github.com/facebook/react  
+[12] Create React App: https://github.com/facebook/create-react-app  
+[13] Recharts: https://github.com/recharts/recharts  
+[14] NumPy: https://github.com/numpy/numpy  
+[15] ECE 470 course materials (instructor-provided).  
+[16] Project repository: https://github.com/ahmaddaadaa/ECE470_Group9  
+[17] Docker documentation: https://docs.docker.com/  
+[18] Docker Compose: https://docs.docker.com/compose/  
+[19] Official Python Docker image: https://hub.docker.com/_/python  
+[20] Docker overview (what containers are for): https://docs.docker.com/get-started/docker-overview/  
+
+---

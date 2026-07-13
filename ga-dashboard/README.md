@@ -1,41 +1,35 @@
-# ECE 470 – Group 9  
+# ECE 470 – Group 9
 ## Reactor temperature control with a genetic algorithm
 
-Course project for **ECE 470**. We built a small demo where a simulated reactor should stay near **37 °C** (safe range **35–39 °C**) after a heat disturbance. A **genetic algorithm** picks control actions instead of a fixed PID-style law.
+Course project. Simulated reactor near **37 °C** (safe band **35–39 °C**). After a heat disturbance, a **genetic algorithm** chooses control actions.
 
-Everything lives under `ga-dashboard/`.
+Code is under `ga-dashboard/`.
 
----
+## Idea
 
-## What we built
+Red curve = no control. Green curve = GA control back toward 37 °C.
 
-Heat hits the plant. If you do nothing, temperature drifts out of the safe band (red curve). The GA tries different chromosomes and applies the best one it finds so temperature comes back toward 37 °C (green curve).
+Each step uses four levels **0–7** (3 bits each):
 
-Each control step uses four actions, each as a level **0–7** (three bits, `000` … `111`):
+| Gene | Name | Effect on T |
+|------|------|-------------|
+| N | Nutrients | raises |
+| M | Mixing | lowers |
+| C | Cooling | lowers |
+| H | Heating | raises |
 
-| Gene | Name | What it does to temperature |
-|------|------|-----------------------------|
-| N | Nutrients | tends to **raise** T |
-| M | Mixing | tends to **lower** T |
-| C | Cooling | **lowers** T (main recovery tool) |
-| H | Heating | **raises** T |
-
-On the dashboard the chromosome for one step is **12 bits**:
+Dashboard chromosome (one step) = **12 bits**:
 
 ```text
-[ N 3 bits | M 3 bits | C 3 bits | H 3 bits ]
+[ N | M | C | H ]   each 3 bits
 ```
 
-There are two software sides:
+- **React app** — browser GA, chart, tables, optional Arduino BLE  
+- **Python** — offline GA (96-bit full schedule), run in terminal or Docker  
 
-1. **React app (main demo)** — runs the GA in the browser, plots red vs green, shows the plan table and top-12 ranking, optional live stepping, optional **Arduino BLE**.
-2. **Python package** — offline GA (96-bit full schedule), scenario generation, JSON export, optional local API.
+For a basic demo, `npm start` is enough. Use Python when you want to show the algorithm in the terminal.
 
-You can finish the lab demo with only `npm start`. Python is there for offline runs and write-ups.
-
----
-
-## How to run the dashboard
+## Dashboard
 
 ```bash
 cd ga-dashboard
@@ -43,106 +37,117 @@ npm install
 npm start
 ```
 
-Open the URL the terminal prints (often includes `/ECE470_Group9` for GitHub Pages).
+Typical flow: set disturbance → Apply Disturbance → Run Optimization → Watch Live.  
+Optional: connect MKR WIFI 1010 in Chrome (BLE).
 
-Suggested flow:
+## Arduino (optional)
 
-1. Set **Disturbance** strength.  
-2. **Apply Disturbance** — red path without control.  
-3. **Run Optimization** — green recovery + tables.  
-4. **Watch Live** — both curves update once per second.  
-5. (Optional) **Connect MKR WIFI 1010** if you uploaded the Arduino sketch.
+BLE with **ArduinoBLE**, board name **`ECE470-MKR1010`**. Sketch is local under `arduino/` (not always on git). Sends levels `N,M,C,H`.
 
----
-
-## Arduino (MKR WIFI 1010) — optional
-
-The dashboard can send N/M/C/H levels over **BLE** (Chrome Web Bluetooth on localhost).  
-Arduino sketch files are kept **local only** (not in this git branch).  
-If you have the sketch, upload it to an **MKR WIFI 1010** with **ArduinoBLE**; device name **`ECE470-MKR1010`**.
-
----
-
-## Python offline GA (optional)
+## Python GA (terminal)
 
 ```bash
 cd ga-dashboard/python
 pip install -r requirements.txt
-python3 run_ga.py --disturbance 1.0 --population 70 --generations 100
+python3 run_ga.py --disturbance 1.0 --population 40 --generations 40
 ```
 
-That writes JSON under `public/data/`. Optional API:
+You should see lines like `gen 0: best=... avg=...`.
+
+Results go to:
+
+- `public/data/dataset.json`
+- `public/data/ga_results.json`
+
+| File | Role |
+|------|------|
+| `python/chromosome.py` | 96-bit schedule |
+| `python/model.py` | plant + cost |
+| `python/fitness.py` | fitness |
+| `python/ga.py` | GA loop |
+| `python/run_ga.py` | CLI |
 
 ```bash
-python3 api_server.py
-# http://127.0.0.1:8000
+python3 run_ga.py --help
 ```
 
----
+Optional API: `python3 api_server.py` → `http://127.0.0.1:8000`
+
+### Docker container (optional)
+
+We also package the Python GA as a **Docker container** so the algorithm can run the same way on any machine that has Docker (same Python version, same dependencies). That avoids “it works on my laptop” install issues for a demo or lab PC.
+
+The container runs `api_server.py` and exposes an HTTP API on port **8000**. The React / GitHub Pages UI does **not** need Docker; it uses the browser GA. Docker is only for the **Python** path.
+
+**Why use a container here**
+
+| Reason | Detail |
+|--------|--------|
+| Reproducible | Image pins Python + NumPy; no manual `pip` fights |
+| Isolated | GA API does not mess with the rest of the system |
+| Portable | Same `docker compose up` on Mac, Windows, or lab Linux |
+| Optional service | Other tools can call `/api/run-ga` over HTTP |
+
+**Run it**
+
+```bash
+cd ga-dashboard/python
+docker compose up --build
+curl http://127.0.0.1:8000/api/health
+```
+
+| File | Role |
+|------|------|
+| `python/Dockerfile` | how the image is built |
+| `python/docker-compose.yml` | one-command start on port 8000 |
+| `python/api_server.py` | GA HTTP API inside the container |
+
+Stop with `docker compose down`. More notes: `python/README.md`.
 
 ## Plant model (dashboard)
 
-At each step:
-
 ```text
-ΔT = wN·N + wH·H − wC·C − wM·M + heat
-T_next = T + ΔT
+dT = wN*N + wH*H - wC*C - wM*M + heat
+T_next = T + dT
 ```
 
-Current browser weights (°C per level):
+| Weight | Value |
+|--------|-------|
+| wN | 0.20 |
+| wM | 0.28 |
+| wC | 0.65 |
+| wH | 0.55 |
 
-| Weight | Value | Role |
-|--------|-------|------|
-| wN | 0.20 | nutrients raise T |
-| wM | 0.28 | mixing lowers T |
-| wC | 0.65 | cooling lowers T |
-| wH | 0.55 | heating raises T |
-
-Target **37 °C**, safe band **35–39 °C**. Fitness scores how close you are to the target and the band, how much better you are than doing nothing, and subtracts cost / extreme temperatures.
-
----
-
-## Folder map
+## Folder layout
 
 ```text
 ga-dashboard/
-├── src/
-│   ├── App.js
-│   ├── components/     chart, tables, BLE bar
-│   ├── ga/             browser GA
-│   ├── ble/            Web Bluetooth client
-│   └── styles/
-├── arduino/            MKR WIFI 1010 sketch + notes
-├── python/             offline GA + API
-├── public/data/        sample JSON
-├── PROJECT_REPORT.md
-└── README.md
+  src/          React UI + browser GA
+  ble/          Web Bluetooth
+  python/       offline GA
+  arduino/      MKR sketch (local)
+  public/data/  sample JSON
 ```
-
----
 
 ## References
 
-**GA / chromosomes**
-
-- [DEAP](https://github.com/DEAP/deap)  
-- [PyGAD](https://github.com/ahmedfgad/GeneticAlgorithmPython)  
-- [scikit-opt](https://github.com/guofei9987/scikit-opt)  
-- Goldberg — *Genetic Algorithms in Search, Optimization, and Machine Learning*
-
-**React / charts / styling**
-
-- [Create React App](https://github.com/facebook/create-react-app)  
-- [React](https://github.com/facebook/react)  
-- [Recharts](https://github.com/recharts/recharts)  
-- [React styling](https://react.dev/learn/styling-css)
-
-**Arduino BLE**
-
-- [ArduinoBLE library](https://github.com/arduino-libraries/ArduinoBLE)  
-- Board docs for **MKR WIFI 1010**
-
----
+1. D. E. Goldberg, *Genetic Algorithms in Search, Optimization, and Machine Learning*. Addison-Wesley, 1989.  
+2. M. Mitchell, *An Introduction to Genetic Algorithms*. MIT Press, 1996.  
+3. [DEAP](https://github.com/DEAP/deap)  
+4. [PyGAD](https://github.com/ahmedfgad/GeneticAlgorithmPython)  
+5. K. J. Åström and T. Hägglund, *PID Controllers: Theory, Design, and Tuning*, 2nd ed. ISA, 1995.  
+6. [Arduino PID Library](https://github.com/br3ttb/Arduino-PID-Library)  
+7. [ArduinoBLE](https://github.com/arduino-libraries/ArduinoBLE)  
+8. [MKR WIFI 1010 docs](https://docs.arduino.cc/hardware/mkr-wifi-1010)  
+9. [MDN Web Bluetooth](https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API)  
+10. [Chrome Web Bluetooth samples](https://googlechrome.github.io/samples/web-bluetooth/)  
+11. [React](https://github.com/facebook/react)  
+12. [Create React App](https://github.com/facebook/create-react-app)  
+13. [Recharts](https://github.com/recharts/recharts)  
+14. [NumPy](https://github.com/numpy/numpy)  
+15. [Docker docs](https://docs.docker.com/) — containers and images  
+16. [Docker Compose](https://docs.docker.com/compose/) — multi-service / one-command local run  
+17. [python Docker official image](https://hub.docker.com/_/python) — base image we use (`python:3.12-slim`)
 
 ## Group
 
