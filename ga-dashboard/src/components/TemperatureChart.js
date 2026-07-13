@@ -150,8 +150,7 @@ export default function TemperatureChart({
       <div className="card-head">
         <h3>{title}</h3>
         <span className="card-tag">
-          37 C · safe {SAFE_LOW}–{SAFE_HIGH}
-          {chartData.length ? ` · ${chartData.length} pts` : ""}
+          Target 37 C, safe {SAFE_LOW} to {SAFE_HIGH} C
         </span>
       </div>
 

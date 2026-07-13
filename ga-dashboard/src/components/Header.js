@@ -6,8 +6,8 @@ export default function Header() {
         <h2>GA Temperature Control</h2>
       </div>
       <p className="header-blurb">
-        Red = no control · Green = GA recovery · chromosomes levels 0–7
-        (000–111) · safe band 35–39 C · target 37 C
+        Red is no control. Green is optimized recovery. Levels 0 to 7. Safe range
+        35 to 39 C. Target 37 C.
       </p>
     </header>
   );

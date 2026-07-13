@@ -21,21 +21,21 @@ export default function ResultsSummary({
       value:
         latestFitness != null && Number.isFinite(Number(latestFitness))
           ? Number(latestFitness).toFixed(1)
-          : "—"
+          : "-"
     },
     {
       label: "Step cost",
       value:
         latestCost != null && Number.isFinite(Number(latestCost))
           ? Number(latestCost).toFixed(2)
-          : "—"
+          : "-"
     },
     {
       label: "Plan cost",
       value:
         planCost != null && Number.isFinite(Number(planCost))
           ? Number(planCost).toFixed(2)
-          : "—"
+          : "-"
     }
   ];
 
@@ -55,7 +55,10 @@ export default function ResultsSummary({
   }
 
   if (peakBefore != null) {
-    items.push({ label: "No-ctrl max", value: Number(peakBefore).toFixed(1) });
+    items.push({
+      label: "Max without control",
+      value: Number(peakBefore).toFixed(1)
+    });
   }
 
   return (

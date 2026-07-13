@@ -2,13 +2,13 @@ import ChromosomeBits, { ChromosomeLegend } from "./ChromosomeBits";
 
 function fmtT(v) {
   if (v == null || Number.isNaN(Number(v))) return "-";
-  return `${Number(v).toFixed(2)} C`;
+  return Number(v).toFixed(2) + " C";
 }
 
 function fmtD(v) {
   if (v == null || Number.isNaN(Number(v))) return "-";
   const n = Number(v);
-  return `${n >= 0 ? "+" : ""}${n.toFixed(2)}`;
+  return (n >= 0 ? "+" : "") + n.toFixed(2);
 }
 
 export default function PlanTable({
@@ -41,7 +41,7 @@ export default function PlanTable({
         <section className="card table-card">
           <div className="card-head">
             <h3>Step decisions</h3>
-            <span className="card-tag">newest first · {rows.length} steps</span>
+            <span className="card-tag">{rows.length} steps, newest first</span>
           </div>
           <ChromosomeLegend compact />
           <div className="table-scroll">
@@ -56,7 +56,7 @@ export default function PlanTable({
                   <th>M</th>
                   <th>C</th>
                   <th>H</th>
-                  <th>ΔT ctrl</th>
+                  <th>Ctrl change</th>
                   <th>Heat</th>
                   <th>Cost</th>
                 </tr>
@@ -122,28 +122,26 @@ export default function PlanTable({
       {top12.length > 0 && (
         <section className="card table-card rank-card">
           <div className="card-head">
-            <h3>Top 12 by fitness, then step cost</h3>
+            <h3>Top 12 chromosomes</h3>
             <span className="card-tag">
               {rankLabelStep != null
-                ? `one step (#${rankLabelStep}) · levels 0–7`
-                : "one step · levels 0–7"}
+                ? `step ${rankLabelStep}, levels 0 to 7`
+                : "levels 0 to 7"}
             </span>
           </div>
           <div className="table-scroll rank-scroll">
             <table className="data-table dense rank-table">
               <thead>
                 <tr>
-                  <th>Rk</th>
-                  <th>Fit</th>
-                  <th title="Cost of this single 12-bit chromosome only">
-                    Step cost
-                  </th>
-                  <th>Chromosome (000–111)</th>
+                  <th>Rank</th>
+                  <th>Fitness</th>
+                  <th>Step cost</th>
+                  <th>Chromosome</th>
                   <th>N</th>
                   <th>M</th>
                   <th>C</th>
                   <th>H</th>
-                  <th>ΔT</th>
+                  <th>Change</th>
                   <th>Temp</th>
                 </tr>
               </thead>

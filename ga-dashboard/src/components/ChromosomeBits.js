@@ -1,5 +1,3 @@
-// Colored bit chips for N / M / C / H (each 3 bits)
-
 function levelToBits(level) {
   const v = Math.max(0, Math.min(7, Number(level) | 0));
   return v.toString(2).padStart(3, "0");
@@ -7,7 +5,6 @@ function levelToBits(level) {
 
 function parseFromString(bitsStr) {
   if (!bitsStr || typeof bitsStr !== "string") return null;
-  // Accept "[000 001 010 011]" or "000 001 010 011" or "000001010011"
   const cleaned = bitsStr.replace(/[[\],]/g, " ").trim();
   const parts = cleaned.split(/\s+/).filter(Boolean);
   if (parts.length === 4 && parts.every((p) => /^[01]{3}$/.test(p))) {
@@ -37,12 +34,6 @@ const GENES = [
   { key: "h", label: "H", cls: "gene-h", title: "Heating (raises T)" }
 ];
 
-/**
- * props:
- *  - n,m,c,h levels OR bits string
- *  - showLabels: show N/M/C/H labels above chips
- *  - compact: smaller chips for tables
- */
 export default function ChromosomeBits({
   n,
   m,
@@ -53,10 +44,7 @@ export default function ChromosomeBits({
   compact = false
 }) {
   let levels = { n, m, c, h };
-  if (
-    (n == null || m == null || c == null || h == null) &&
-    bits != null
-  ) {
+  if ((n == null || m == null || c == null || h == null) && bits != null) {
     const parsed = parseFromString(bits);
     if (parsed) levels = parsed;
   }
@@ -67,19 +55,20 @@ export default function ChromosomeBits({
     levels.c == null ||
     levels.h == null
   ) {
-    return <span className="chromo-missing">—</span>;
+    return <span className="chromo-missing">-</span>;
   }
 
   return (
-    <span
-      className={`chromo ${compact ? "chromo-compact" : ""}`}
-      title="Chromosome: [N M C H] each 3 bits, levels 0–7"
-    >
+    <span className={`chromo ${compact ? "chromo-compact" : ""}`}>
       {GENES.map((g) => {
         const level = levels[g.key];
         const bitStr = levelToBits(level);
         return (
-          <span key={g.key} className={`gene ${g.cls}`} title={`${g.title}: level ${level} = ${bitStr}`}>
+          <span
+            key={g.key}
+            className={`gene ${g.cls}`}
+            title={`${g.title}: level ${level} = ${bitStr}`}
+          >
             {showLabels && <span className="gene-label">{g.label}</span>}
             <span className="gene-bits">
               {bitStr.split("").map((b, i) => (
@@ -99,30 +88,29 @@ export default function ChromosomeBits({
   );
 }
 
-/** Small legend for the page */
 export function ChromosomeLegend({ compact = false }) {
   return (
     <div className={`chromo-legend ${compact ? "chromo-legend-compact" : ""}`}>
       <span className="legend-title">Bits:</span>
       <span className="gene gene-n legend-item">
         <span className="gene-label">N</span>
-        {compact ? "↑" : " nutrients (↑T)"}
+        {compact ? " nutrients" : " nutrients (raises T)"}
       </span>
       <span className="gene gene-m legend-item">
         <span className="gene-label">M</span>
-        {compact ? "↓" : " mixing (↓T)"}
+        {compact ? " mixing" : " mixing (lowers T)"}
       </span>
       <span className="gene gene-c legend-item">
         <span className="gene-label">C</span>
-        {compact ? "↓" : " cooling (↓T)"}
+        {compact ? " cooling" : " cooling (lowers T)"}
       </span>
       <span className="gene gene-h legend-item">
         <span className="gene-label">H</span>
-        {compact ? "↑" : " heating (↑T)"}
+        {compact ? " heating" : " heating (raises T)"}
       </span>
       {!compact && (
         <span className="legend-note">
-          Light chip = 0 · Dark chip = 1 · number = level 0–7
+          Light chip is 0, dark chip is 1, number is level 0 to 7
         </span>
       )}
     </div>
