@@ -1,0 +1,828 @@
+{
+  "disturbanceScale": 1.0,
+  "numScenarios": 12,
+  "horizon": 8,
+  "baseDisturbanceProfile": [
+    0.0,
+    0.8,
+    1.2,
+    1.0,
+    0.6,
+    0.3,
+    0.1,
+    0.0
+  ],
+  "scenarios": [
+    {
+      "id": "sc_000",
+      "T0": 37.0,
+      "disturbance": [
+        0.0,
+        0.8,
+        1.2,
+        1.0,
+        0.6,
+        0.3,
+        0.1,
+        0.0
+      ],
+      "noise": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "disturbanceScale": 1.0,
+      "baselineTrajectory": [
+        {
+          "time": 0,
+          "temperature": 37.0
+        },
+        {
+          "time": 1,
+          "temperature": 37.0
+        },
+        {
+          "time": 2,
+          "temperature": 37.8
+        },
+        {
+          "time": 3,
+          "temperature": 39.0
+        },
+        {
+          "time": 4,
+          "temperature": 40.0
+        },
+        {
+          "time": 5,
+          "temperature": 40.6
+        },
+        {
+          "time": 6,
+          "temperature": 40.9
+        },
+        {
+          "time": 7,
+          "temperature": 41.0
+        },
+        {
+          "time": 8,
+          "temperature": 41.0
+        }
+      ],
+      "baselineMaxTemp": 41.0,
+      "baselineMinTemp": 37.0,
+      "baselinePctInRange": 0.4444
+    },
+    {
+      "id": "sc_001",
+      "T0": 36.755,
+      "disturbance": [
+        0.0,
+        0.7868,
+        1.1802,
+        0.9835,
+        0.5901,
+        0.2951,
+        0.0984,
+        0.0
+      ],
+      "noise": [
+        -0.0018,
+        0.0417,
+        -0.0807,
+        -0.0275,
+        -0.1141,
+        -0.0774,
+        -0.1105,
+        -0.0141
+      ],
+      "disturbanceScale": 1.0,
+      "baselineTrajectory": [
+        {
+          "time": 0,
+          "temperature": 36.755
+        },
+        {
+          "time": 1,
+          "temperature": 36.753
+        },
+        {
+          "time": 2,
+          "temperature": 37.582
+        },
+        {
+          "time": 3,
+          "temperature": 38.681
+        },
+        {
+          "time": 4,
+          "temperature": 39.637
+        },
+        {
+          "time": 5,
+          "temperature": 40.113
+        },
+        {
+          "time": 6,
+          "temperature": 40.331
+        },
+        {
+          "time": 7,
+          "temperature": 40.319
+        },
+        {
+          "time": 8,
+          "temperature": 40.305
+        }
+      ],
+      "baselineMaxTemp": 40.331,
+      "baselineMinTemp": 36.753,
+      "baselinePctInRange": 0.4444
+    },
+    {
+      "id": "sc_002",
+      "T0": 37.066,
+      "disturbance": [
+        0.0,
+        0.6886,
+        1.0328,
+        0.8607,
+        0.5164,
+        0.2582,
+        0.0861,
+        0.0
+      ],
+      "noise": [
+        -0.0112,
+        -0.151,
+        -0.0323,
+        -0.0029,
+        0.0068,
+        -0.0918,
+        -0.0287,
+        -0.0587
+      ],
+      "disturbanceScale": 1.0,
+      "baselineTrajectory": [
+        {
+          "time": 0,
+          "temperature": 37.066
+        },
+        {
+          "time": 1,
+          "temperature": 37.055
+        },
+        {
+          "time": 2,
+          "temperature": 37.592
+        },
+        {
+          "time": 3,
+          "temperature": 38.593
+        },
+        {
+          "time": 4,
+          "temperature": 39.451
+        },
+        {
+          "time": 5,
+          "temperature": 39.974
+        },
+        {
+          "time": 6,
+          "temperature": 40.14
+        },
+        {
+          "time": 7,
+          "temperature": 40.198
+        },
+        {
+          "time": 8,
+          "temperature": 40.139
+        }
+      ],
+      "baselineMaxTemp": 40.198,
+      "baselineMinTemp": 37.055,
+      "baselinePctInRange": 0.4444
+    },
+    {
+      "id": "sc_003",
+      "T0": 37.301,
+      "disturbance": [
+        0.0,
+        0.7687,
+        1.153,
+        0.9609,
+        0.5765,
+        0.2883,
+        0.0961,
+        0.0
+      ],
+      "noise": [
+        -0.002,
+        0.0531,
+        -0.035,
+        -0.0067,
+        0.0066,
+        0.0038,
+        -0.0735,
+        0.0046
+      ],
+      "disturbanceScale": 1.0,
+      "baselineTrajectory": [
+        {
+          "time": 0,
+          "temperature": 37.301
+        },
+        {
+          "time": 1,
+          "temperature": 37.299
+        },
+        {
+          "time": 2,
+          "temperature": 38.121
+        },
+        {
+          "time": 3,
+          "temperature": 39.239
+        },
+        {
+          "time": 4,
+          "temperature": 40.193
+        },
+        {
+          "time": 5,
+          "temperature": 40.776
+        },
+        {
+          "time": 6,
+          "temperature": 41.068
+        },
+        {
+          "time": 7,
+          "temperature": 41.091
+        },
+        {
+          "time": 8,
+          "temperature": 41.095
+        }
+      ],
+      "baselineMaxTemp": 41.095,
+      "baselineMinTemp": 37.299,
+      "baselinePctInRange": 0.3333
+    },
+    {
+      "id": "sc_004",
+      "T0": 37.137,
+      "disturbance": [
+        0.0,
+        0.8099,
+        1.2148,
+        1.0123,
+        0.6074,
+        0.3037,
+        0.1012,
+        0.0
+      ],
+      "noise": [
+        0.0072,
+        -0.0385,
+        0.12,
+        0.0457,
+        -0.072,
+        0.0045,
+        0.0346,
+        -0.0113
+      ],
+      "disturbanceScale": 1.0,
+      "baselineTrajectory": [
+        {
+          "time": 0,
+          "temperature": 37.137
+        },
+        {
+          "time": 1,
+          "temperature": 37.144
+        },
+        {
+          "time": 2,
+          "temperature": 37.916
+        },
+        {
+          "time": 3,
+          "temperature": 39.251
+        },
+        {
+          "time": 4,
+          "temperature": 40.309
+        },
+        {
+          "time": 5,
+          "temperature": 40.844
+        },
+        {
+          "time": 6,
+          "temperature": 41.152
+        },
+        {
+          "time": 7,
+          "temperature": 41.288
+        },
+        {
+          "time": 8,
+          "temperature": 41.277
+        }
+      ],
+      "baselineMaxTemp": 41.288,
+      "baselineMinTemp": 37.137,
+      "baselinePctInRange": 0.3333
+    },
+    {
+      "id": "sc_005",
+      "T0": 36.179,
+      "disturbance": [
+        0.0,
+        0.9149,
+        1.3723,
+        1.1436,
+        0.6862,
+        0.3431,
+        0.1144,
+        0.0
+      ],
+      "noise": [
+        0.0863,
+        -0.0405,
+        0.0122,
+        -0.0278,
+        0.0076,
+        -0.0712,
+        -0.0348,
+        -0.0118
+      ],
+      "disturbanceScale": 1.0,
+      "baselineTrajectory": [
+        {
+          "time": 0,
+          "temperature": 36.179
+        },
+        {
+          "time": 1,
+          "temperature": 36.266
+        },
+        {
+          "time": 2,
+          "temperature": 37.14
+        },
+        {
+          "time": 3,
+          "temperature": 38.525
+        },
+        {
+          "time": 4,
+          "temperature": 39.64
+        },
+        {
+          "time": 5,
+          "temperature": 40.334
+        },
+        {
+          "time": 6,
+          "temperature": 40.606
+        },
+        {
+          "time": 7,
+          "temperature": 40.686
+        },
+        {
+          "time": 8,
+          "temperature": 40.674
+        }
+      ],
+      "baselineMaxTemp": 40.686,
+      "baselineMinTemp": 36.179,
+      "baselinePctInRange": 0.4444
+    },
+    {
+      "id": "sc_006",
+      "T0": 37.468,
+      "disturbance": [
+        0.0,
+        0.7316,
+        1.0974,
+        0.9145,
+        0.5487,
+        0.2744,
+        0.0915,
+        0.0
+      ],
+      "noise": [
+        -0.0477,
+        0.0388,
+        -0.1195,
+        -0.0278,
+        -0.0058,
+        0.0754,
+        0.0414,
+        -0.0196
+      ],
+      "disturbanceScale": 1.0,
+      "baselineTrajectory": [
+        {
+          "time": 0,
+          "temperature": 37.468
+        },
+        {
+          "time": 1,
+          "temperature": 37.42
+        },
+        {
+          "time": 2,
+          "temperature": 38.191
+        },
+        {
+          "time": 3,
+          "temperature": 39.168
+        },
+        {
+          "time": 4,
+          "temperature": 40.055
+        },
+        {
+          "time": 5,
+          "temperature": 40.598
+        },
+        {
+          "time": 6,
+          "temperature": 40.948
+        },
+        {
+          "time": 7,
+          "temperature": 41.081
+        },
+        {
+          "time": 8,
+          "temperature": 41.061
+        }
+      ],
+      "baselineMaxTemp": 41.081,
+      "baselineMinTemp": 37.42,
+      "baselinePctInRange": 0.3333
+    },
+    {
+      "id": "sc_007",
+      "T0": 37.218,
+      "disturbance": [
+        0.0,
+        0.7262,
+        1.0893,
+        0.9077,
+        0.5446,
+        0.2723,
+        0.0908,
+        0.0
+      ],
+      "noise": [
+        -0.0257,
+        -0.0182,
+        0.0212,
+        -0.0072,
+        -0.0118,
+        -0.0668,
+        -0.0007,
+        -0.0266
+      ],
+      "disturbanceScale": 1.0,
+      "baselineTrajectory": [
+        {
+          "time": 0,
+          "temperature": 37.218
+        },
+        {
+          "time": 1,
+          "temperature": 37.193
+        },
+        {
+          "time": 2,
+          "temperature": 37.9
+        },
+        {
+          "time": 3,
+          "temperature": 39.011
+        },
+        {
+          "time": 4,
+          "temperature": 39.911
+        },
+        {
+          "time": 5,
+          "temperature": 40.444
+        },
+        {
+          "time": 6,
+          "temperature": 40.65
+        },
+        {
+          "time": 7,
+          "temperature": 40.74
+        },
+        {
+          "time": 8,
+          "temperature": 40.713
+        }
+      ],
+      "baselineMaxTemp": 40.74,
+      "baselineMinTemp": 37.193,
+      "baselinePctInRange": 0.3333
+    },
+    {
+      "id": "sc_008",
+      "T0": 36.538,
+      "disturbance": [
+        0.0,
+        0.8903,
+        1.3354,
+        1.1129,
+        0.6677,
+        0.3339,
+        0.1113,
+        0.0
+      ],
+      "noise": [
+        0.0401,
+        -0.0204,
+        0.0631,
+        -0.0003,
+        0.035,
+        -0.0775,
+        0.0208,
+        -0.1013
+      ],
+      "disturbanceScale": 1.0,
+      "baselineTrajectory": [
+        {
+          "time": 0,
+          "temperature": 36.538
+        },
+        {
+          "time": 1,
+          "temperature": 36.578
+        },
+        {
+          "time": 2,
+          "temperature": 37.448
+        },
+        {
+          "time": 3,
+          "temperature": 38.847
+        },
+        {
+          "time": 4,
+          "temperature": 39.959
+        },
+        {
+          "time": 5,
+          "temperature": 40.662
+        },
+        {
+          "time": 6,
+          "temperature": 40.918
+        },
+        {
+          "time": 7,
+          "temperature": 41.05
+        },
+        {
+          "time": 8,
+          "temperature": 40.949
+        }
+      ],
+      "baselineMaxTemp": 41.05,
+      "baselineMinTemp": 36.538,
+      "baselinePctInRange": 0.4444
+    },
+    {
+      "id": "sc_009",
+      "T0": 36.458,
+      "disturbance": [
+        0.0,
+        0.7828,
+        1.1742,
+        0.9785,
+        0.5871,
+        0.2935,
+        0.0978,
+        0.0
+      ],
+      "noise": [
+        0.0098,
+        0.1347,
+        -0.0499,
+        -0.0374,
+        0.0123,
+        0.0296,
+        -0.0106,
+        -0.0124
+      ],
+      "disturbanceScale": 1.0,
+      "baselineTrajectory": [
+        {
+          "time": 0,
+          "temperature": 36.458
+        },
+        {
+          "time": 1,
+          "temperature": 36.468
+        },
+        {
+          "time": 2,
+          "temperature": 37.385
+        },
+        {
+          "time": 3,
+          "temperature": 38.509
+        },
+        {
+          "time": 4,
+          "temperature": 39.45
+        },
+        {
+          "time": 5,
+          "temperature": 40.05
+        },
+        {
+          "time": 6,
+          "temperature": 40.373
+        },
+        {
+          "time": 7,
+          "temperature": 40.46
+        },
+        {
+          "time": 8,
+          "temperature": 40.448
+        }
+      ],
+      "baselineMaxTemp": 40.46,
+      "baselineMinTemp": 36.458,
+      "baselinePctInRange": 0.4444
+    },
+    {
+      "id": "sc_010",
+      "T0": 35.951,
+      "disturbance": [
+        0.0,
+        0.904,
+        1.356,
+        1.13,
+        0.678,
+        0.339,
+        0.113,
+        0.0
+      ],
+      "noise": [
+        -0.0048,
+        0.0021,
+        -0.0633,
+        0.0156,
+        -0.0515,
+        0.0583,
+        0.0116,
+        0.0054
+      ],
+      "disturbanceScale": 1.0,
+      "baselineTrajectory": [
+        {
+          "time": 0,
+          "temperature": 35.951
+        },
+        {
+          "time": 1,
+          "temperature": 35.946
+        },
+        {
+          "time": 2,
+          "temperature": 36.852
+        },
+        {
+          "time": 3,
+          "temperature": 38.145
+        },
+        {
+          "time": 4,
+          "temperature": 39.291
+        },
+        {
+          "time": 5,
+          "temperature": 39.917
+        },
+        {
+          "time": 6,
+          "temperature": 40.315
+        },
+        {
+          "time": 7,
+          "temperature": 40.439
+        },
+        {
+          "time": 8,
+          "temperature": 40.445
+        }
+      ],
+      "baselineMaxTemp": 40.445,
+      "baselineMinTemp": 35.946,
+      "baselinePctInRange": 0.4444
+    },
+    {
+      "id": "sc_011",
+      "T0": 37.77,
+      "disturbance": [
+        0.0,
+        0.8542,
+        1.2813,
+        1.0678,
+        0.6407,
+        0.3203,
+        0.1068,
+        0.0
+      ],
+      "noise": [
+        -0.0679,
+        0.0218,
+        -0.1277,
+        0.0508,
+        -0.1048,
+        0.0454,
+        -0.0507,
+        0.0467
+      ],
+      "disturbanceScale": 1.0,
+      "baselineTrajectory": [
+        {
+          "time": 0,
+          "temperature": 37.77
+        },
+        {
+          "time": 1,
+          "temperature": 37.702
+        },
+        {
+          "time": 2,
+          "temperature": 38.578
+        },
+        {
+          "time": 3,
+          "temperature": 39.731
+        },
+        {
+          "time": 4,
+          "temperature": 40.85
+        },
+        {
+          "time": 5,
+          "temperature": 41.386
+        },
+        {
+          "time": 6,
+          "temperature": 41.751
+        },
+        {
+          "time": 7,
+          "temperature": 41.807
+        },
+        {
+          "time": 8,
+          "temperature": 41.854
+        }
+      ],
+      "baselineMaxTemp": 41.854,
+      "baselineMinTemp": 37.702,
+      "baselinePctInRange": 0.3333
+    }
+  ],
+  "weights": {
+    "wN": 0.2,
+    "wM": 0.12,
+    "wC": 0.35,
+    "wH": 0.3
+  },
+  "slew": {
+    "nutrients": 2,
+    "mixing": 2,
+    "cooling": 3,
+    "heating": 1
+  },
+  "costRates": {
+    "nutrients": 0.5,
+    "mixing": 0.4,
+    "cooling": 1.0,
+    "heating": 0.9,
+    "overlapTaxBeta": 0.5
+  }
+}

@@ -21,3 +21,13 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# python
+__pycache__/
+*.py[cod]
+*.docx
+.DS_Store
+
+
+# keep Arduino sketch local (not on remote)
+/arduino/

@@ -1,70 +1,152 @@
-# Getting Started with Create React App
+# ECE 470 – Group 9  
+## Reactor temperature control with a genetic algorithm
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Course project for **ECE 470**. We built a small demo where a simulated reactor should stay near **37 °C** (safe range **35–39 °C**) after a heat disturbance. A **genetic algorithm** picks control actions instead of a fixed PID-style law.
 
-## Available Scripts
+Everything lives under `ga-dashboard/`.
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## What we built
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Heat hits the plant. If you do nothing, temperature drifts out of the safe band (red curve). The GA tries different chromosomes and applies the best one it finds so temperature comes back toward 37 °C (green curve).
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Each control step uses four actions, each as a level **0–7** (three bits, `000` … `111`):
 
-### `npm test`
+| Gene | Name | What it does to temperature |
+|------|------|-----------------------------|
+| N | Nutrients | tends to **raise** T |
+| M | Mixing | tends to **lower** T |
+| C | Cooling | **lowers** T (main recovery tool) |
+| H | Heating | **raises** T |
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+On the dashboard the chromosome for one step is **12 bits**:
 
-### `npm run build`
+```text
+[ N 3 bits | M 3 bits | C 3 bits | H 3 bits ]
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+There are two software sides:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. **React app (main demo)** — runs the GA in the browser, plots red vs green, shows the plan table and top-12 ranking, optional live stepping, optional **Arduino BLE**.
+2. **Python package** — offline GA (96-bit full schedule), scenario generation, JSON export, optional local API.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+You can finish the lab demo with only `npm start`. Python is there for offline runs and write-ups.
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## How to run the dashboard
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+cd ga-dashboard
+npm install
+npm start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Open the URL the terminal prints (often includes `/ECE470_Group9` for GitHub Pages).
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+Suggested flow:
 
-## Learn More
+1. Set **Disturbance** strength.  
+2. **Apply Disturbance** — red path without control.  
+3. **Run Optimization** — green recovery + tables.  
+4. **Watch Live** — both curves update once per second.  
+5. (Optional) **Connect MKR WIFI 1010** if you uploaded the Arduino sketch.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+---
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Arduino (MKR WIFI 1010) — optional
 
-### Code Splitting
+The dashboard can send N/M/C/H levels over **BLE** (Chrome Web Bluetooth on localhost).  
+Arduino sketch files are kept **local only** (not in this git branch).  
+If you have the sketch, upload it to an **MKR WIFI 1010** with **ArduinoBLE**; device name **`ECE470-MKR1010`**.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+---
 
-### Analyzing the Bundle Size
+## Python offline GA (optional)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+cd ga-dashboard/python
+pip install -r requirements.txt
+python3 run_ga.py --disturbance 1.0 --population 70 --generations 100
+```
 
-### Making a Progressive Web App
+That writes JSON under `public/data/`. Optional API:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+```bash
+python3 api_server.py
+# http://127.0.0.1:8000
+```
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Plant model (dashboard)
 
-### Deployment
+At each step:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+```text
+ΔT = wN·N + wH·H − wC·C − wM·M + heat
+T_next = T + ΔT
+```
 
-### `npm run build` fails to minify
+Current browser weights (°C per level):
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+| Weight | Value | Role |
+|--------|-------|------|
+| wN | 0.20 | nutrients raise T |
+| wM | 0.28 | mixing lowers T |
+| wC | 0.65 | cooling lowers T |
+| wH | 0.55 | heating raises T |
+
+Target **37 °C**, safe band **35–39 °C**. Fitness scores how close you are to the target and the band, how much better you are than doing nothing, and subtracts cost / extreme temperatures.
+
+---
+
+## Folder map
+
+```text
+ga-dashboard/
+├── src/
+│   ├── App.js
+│   ├── components/     chart, tables, BLE bar, …
+│   ├── ga/             browser GA (model, chromosome, engine, live)
+│   ├── ble/            Web Bluetooth client
+│   └── styles/
+├── arduino/            MKR WIFI 1010 sketch + notes
+├── python/             offline GA + API
+├── public/data/        sample JSON
+├── PROJECT_REPORT.md
+└── README.md
+```
+
+---
+
+## References
+
+**GA / chromosomes**
+
+- [DEAP](https://github.com/DEAP/deap)  
+- [PyGAD](https://github.com/ahmedfgad/GeneticAlgorithmPython)  
+- [scikit-opt](https://github.com/guofei9987/scikit-opt)  
+- Goldberg — *Genetic Algorithms in Search, Optimization, and Machine Learning*
+
+**React / charts / styling**
+
+- [Create React App](https://github.com/facebook/create-react-app)  
+- [React](https://github.com/facebook/react)  
+- [Recharts](https://github.com/recharts/recharts)  
+- [React styling](https://react.dev/learn/styling-css)
+
+**Arduino BLE**
+
+- [ArduinoBLE library](https://github.com/arduino-libraries/ArduinoBLE)  
+- Board docs for **MKR WIFI 1010**
+
+---
+
+## Group
+
+ECE 470 – Group 9.  
+Main work is on the chromosome / dashboard branch under this package.
+
+Academic use for the course. Dependencies: `package.json` and `python/requirements.txt`.
