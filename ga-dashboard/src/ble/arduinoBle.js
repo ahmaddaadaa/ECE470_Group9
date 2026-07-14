@@ -12,156 +12,143 @@ function clampLevel(v) {
   return Math.max(0, Math.min(7, n));
 }
 
+function clampHeat(e) {
+  if (!Number.isFinite(e)) return null;
+  return Math.max(-2.5, Math.min(2.5, e));
+}
+
 export function parseStatusText(text) {
-  const out = { raw: text, extraHeat: null, ok: null };
+  const out = { raw: text, extraHeat: null };
   if (!text) return out;
-
-  const eMatch = text.match(/E\s*=\s*([-+0-9.]+)/i);
-  if (eMatch) {
-    const e = Number(eMatch[1]);
-    if (Number.isFinite(e)) out.extraHeat = Math.max(-2.5, Math.min(2.5, e));
-  }
-
-  const dMatch = text.match(/D\s*=\s*([0-9.]+)/i);
-  if (dMatch && out.extraHeat == null) {
-    const d = Number(dMatch[1]);
-    if (Number.isFinite(d)) {
-      out.extraHeat = Math.max(-2.5, Math.min(2.5, (d - 1.25) * 3));
-    }
-  }
-
-  if (/^OK/i.test(text)) out.ok = text;
+  const eMatch = String(text).match(/E\s*=\s*([-+0-9.]+)/i);
+  if (eMatch) out.extraHeat = clampHeat(Number(eMatch[1]));
   return out;
 }
 
+function bytesToText(value) {
+  if (!value) return "";
+  const u8 =
+    value instanceof Uint8Array
+      ? value
+      : new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  return new TextDecoder("utf-8").decode(u8).replace(/\0/g, "").trim();
+}
+
 async function pickDevice() {
-  // Prefer named board; fall back to full picker if filters miss it
+  const opts = { optionalServices: [BLE_SERVICE] };
   try {
     return await navigator.bluetooth.requestDevice({
-      filters: [
-        { namePrefix: "ECE470" },
-        { name: "ECE470-MKR1010" },
-        { services: [BLE_SERVICE] }
-      ],
-      optionalServices: [BLE_SERVICE]
+      filters: [{ name: "G9" }, { namePrefix: "G9" }],
+      ...opts
     });
-  } catch (e1) {
-    if (e1 && e1.name === "NotFoundError") {
-      return navigator.bluetooth.requestDevice({
-        acceptAllDevices: true,
-        optionalServices: [BLE_SERVICE]
-      });
-    }
-    throw e1;
+  } catch (e) {
+    if (!e || (e.name !== "NotFoundError" && e.name !== "NetworkError")) throw e;
   }
+  return navigator.bluetooth.requestDevice({
+    acceptAllDevices: true,
+    ...opts
+  });
 }
 
 async function connectGatt(device) {
   let lastErr;
   for (let i = 0; i < 5; i += 1) {
     try {
-      if (!device.gatt.connected) {
-        return await device.gatt.connect();
-      }
-      return device.gatt;
+      if (device.gatt.connected) return device.gatt;
+      return await device.gatt.connect();
     } catch (err) {
       lastErr = err;
-      await new Promise((r) => setTimeout(r, 350));
+      await new Promise((r) => setTimeout(r, 600));
     }
   }
   throw lastErr || new Error("GATT connect failed");
 }
 
-/** Write text command; try reliable write first, then without-response. */
 async function writeCmd(cmdChar, data) {
-  // With-response is more reliable over the air for demos
+  // Prefer without-response (lighter); fall back to write
   try {
-    if (cmdChar.properties.write) {
-      await cmdChar.writeValue(data);
+    if (cmdChar.properties.writeWithoutResponse) {
+      await cmdChar.writeValueWithoutResponse(data);
       return;
     }
   } catch (_) {}
-
-  if (cmdChar.properties.writeWithoutResponse) {
-    await cmdChar.writeValueWithoutResponse(data);
+  if (typeof cmdChar.writeValueWithResponse === "function") {
+    await cmdChar.writeValueWithResponse(data);
     return;
   }
-
   await cmdChar.writeValue(data);
 }
 
 export async function connectArduino(handlers = {}) {
   if (!bleSupported()) {
-    throw new Error("Web Bluetooth needs Chrome (or Edge).");
+    throw new Error("Use Google Chrome (Web Bluetooth).");
   }
 
   const device = await pickDevice();
-  if (!device.gatt) {
-    throw new Error("No GATT on device");
-  }
+  if (!device.gatt) throw new Error("No GATT");
 
   await connectGatt(device);
 
+  // Important: do not hammer the radio right after connect
+  await new Promise((r) => setTimeout(r, 800));
+
+  if (!device.gatt.connected) {
+    await connectGatt(device);
+    await new Promise((r) => setTimeout(r, 500));
+  }
+
   const service = await device.gatt.getPrimaryService(BLE_SERVICE);
   const cmdChar = await service.getCharacteristic(BLE_CMD);
-  const tempChar = await service.getCharacteristic(BLE_TEMP);
   const statusChar = await service.getCharacteristic(BLE_STATUS);
 
+  // temp is optional (read-only on new sketch)
+  let tempChar = null;
+  try {
+    tempChar = await service.getCharacteristic(BLE_TEMP);
+  } catch (_) {}
+
+  let alive = true;
   const onGattDisconnected = () => {
+    alive = false;
     if (handlers.onDisconnect) handlers.onDisconnect();
   };
   device.addEventListener("gattserverdisconnected", onGattDisconnected);
 
-  const onTemp = (event) => {
-    const value = event.target.value;
-    if (!value || value.byteLength < 4) return;
-    const t = value.getFloat32(0, true);
-    if (Number.isFinite(t) && handlers.onTemperature) handlers.onTemperature(t);
+  const emitHeat = (raw) => {
+    const e = clampHeat(raw);
+    if (e == null) return;
+    if (handlers.onExtraHeat) handlers.onExtraHeat(e);
   };
 
-  const handleStatusBuffer = (value) => {
-    if (!value) return;
-    const text = new TextDecoder("utf-8").decode(value.buffer || value);
+  const handleStatus = (value) => {
+    const text = bytesToText(value);
+    if (!text) return;
     if (handlers.onStatus) handlers.onStatus(text);
     const parsed = parseStatusText(text);
-    if (parsed.extraHeat != null && handlers.onExtraHeat) {
-      handlers.onExtraHeat(parsed.extraHeat);
-    }
+    if (parsed.extraHeat != null) emitHeat(parsed.extraHeat);
   };
 
-  const onStatus = (event) => handleStatusBuffer(event.target.value);
+  const onStatus = (event) => handleStatus(event.target.value);
 
-  try {
-    await tempChar.startNotifications();
-    tempChar.addEventListener("characteristicvaluechanged", onTemp);
-  } catch (_) {}
-
+  // Only ONE notification subscription — status carries pot E=
   try {
     await statusChar.startNotifications();
     statusChar.addEventListener("characteristicvaluechanged", onStatus);
   } catch (_) {}
 
-  try {
-    const tv = await tempChar.readValue();
-    if (tv.byteLength >= 4) {
-      const t = tv.getFloat32(0, true);
-      if (Number.isFinite(t) && handlers.onTemperature) handlers.onTemperature(t);
-    }
-  } catch (_) {}
+  await new Promise((r) => setTimeout(r, 300));
 
   try {
-    const sv = await statusChar.readValue();
-    handleStatusBuffer(sv);
+    handleStatus(await statusChar.readValue());
   } catch (_) {}
 
-  // Backup poll if notifications drop (common on some stacks)
+  // Slow poll backup (1 Hz) — do not fight the radio
   const pollTimer = setInterval(async () => {
-    if (!device.gatt?.connected) return;
+    if (!alive || !device.gatt?.connected) return;
     try {
-      const sv = await statusChar.readValue();
-      handleStatusBuffer(sv);
+      handleStatus(await statusChar.readValue());
     } catch (_) {}
-  }, 500);
+  }, 1000);
 
   async function ensureConnected() {
     if (device.gatt?.connected) return true;
@@ -174,24 +161,16 @@ export async function connectArduino(handlers = {}) {
   }
 
   async function sendLevels({ n = 0, m = 0, c = 0, h = 0 }) {
-    const ok = await ensureConnected();
-    if (!ok) throw new Error("Not connected");
-
+    if (!(await ensureConnected())) throw new Error("Not connected");
+    // small gap so we don't write during notify windows
+    await new Promise((r) => setTimeout(r, 30));
     const nn = clampLevel(n);
     const mm = clampLevel(m);
     const cc = clampLevel(c);
     const hh = clampLevel(h);
     const text = `${nn},${mm},${cc},${hh}`;
     const data = new TextEncoder().encode(text);
-
-    try {
-      await writeCmd(cmdChar, data);
-    } catch (_) {
-      // one retry after short reconnect
-      await ensureConnected();
-      await writeCmd(cmdChar, data);
-    }
-
+    await writeCmd(cmdChar, data);
     return { n: nn, m: mm, c: cc, h: hh, text };
   }
 
@@ -206,19 +185,14 @@ export async function connectArduino(handlers = {}) {
   }
 
   function disconnect() {
+    alive = false;
     clearInterval(pollTimer);
     try {
-      tempChar.removeEventListener("characteristicvaluechanged", onTemp);
       statusChar.removeEventListener("characteristicvaluechanged", onStatus);
     } catch (_) {}
     device.removeEventListener("gattserverdisconnected", onGattDisconnected);
     if (device.gatt?.connected) device.gatt.disconnect();
   }
-
-  // Handshake so actuators / status update right after connect
-  try {
-    await sendLevels({ n: 0, m: 0, c: 0, h: 0 });
-  } catch (_) {}
 
   return {
     device,
@@ -229,7 +203,7 @@ export async function connectArduino(handlers = {}) {
       return !!device.gatt?.connected;
     },
     get name() {
-      return device.name || "ECE470-MKR1010";
+      return device.name || "G9";
     }
   };
 }

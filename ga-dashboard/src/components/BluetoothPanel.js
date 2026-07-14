@@ -1,6 +1,7 @@
 export default function BluetoothPanel({
   supported,
   connected,
+  note,
   autoSend,
   potLink,
   onAutoSendChange,
@@ -45,6 +46,7 @@ export default function BluetoothPanel({
           </label>
         </>
       )}
+      {note ? <span className="queue-note">{note}</span> : null}
     </div>
   );
 }

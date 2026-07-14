@@ -29,5 +29,4 @@ __pycache__/
 .DS_Store
 
 
-# keep Arduino sketch local (not on remote)
-/arduino/
+

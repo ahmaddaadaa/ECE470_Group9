@@ -31,7 +31,9 @@ export default function App() {
 
   const bleRef = useRef(null);
   const [bleConnected, setBleConnected] = useState(false);
-  const [bleAutoSend, setBleAutoSend] = useState(true);
+  const [bleNote, setBleNote] = useState("");
+  // Default off: sending commands every second can drop weak BLE links
+  const [bleAutoSend, setBleAutoSend] = useState(false);
   const [potLink, setPotLink] = useState(true);
   const bleAutoSendRef = useRef(true);
   const potLinkRef = useRef(true);
@@ -114,21 +116,29 @@ export default function App() {
     if (!Number.isFinite(rounded)) return;
     injectRef.current = rounded;
     setInject(rounded);
+    setBleNote(
+      `Pot extra heat ${rounded >= 0 ? "+" : ""}${rounded.toFixed(2)} C`
+    );
   };
 
   const onBleConnect = async () => {
+    setBleNote("Pick G9 in the list…");
     try {
       const client = await connectArduino({
         onExtraHeat: onPotExtraHeat,
         onDisconnect: () => {
           bleRef.current = null;
           setBleConnected(false);
+          setBleNote("Disconnected");
         }
       });
       bleRef.current = client;
       setBleConnected(true);
-    } catch (_) {
+      setBleNote("Connected " + (client.name || "") + " — turn pot to test");
+    } catch (e) {
       setBleConnected(false);
+      const msg = e && e.message ? e.message : "Connect cancelled";
+      setBleNote(msg);
     }
   };
 
@@ -138,6 +148,7 @@ export default function App() {
       bleRef.current = null;
     }
     setBleConnected(false);
+    setBleNote("");
   };
 
   const onBleSendLatest = () => {
@@ -341,7 +352,7 @@ export default function App() {
             Reset
           </button>
 
-          {playing && (
+          {(playing || bleConnected) && (
             <>
               <span className="toolbar-sep" />
               <label>
@@ -350,9 +361,11 @@ export default function App() {
                   type="range"
                   min="-2.5"
                   max="2.5"
-                  step="0.1"
-                  value={inject}
+                  step="0.05"
+                  value={Number(inject)}
+                  readOnly={bleConnected && potLink}
                   onChange={(e) => {
+                    if (bleConnected && potLink) return;
                     const v = Number(e.target.value);
                     setInject(v);
                     injectRef.current = v;
@@ -360,22 +373,27 @@ export default function App() {
                 />
                 <span>
                   {Number(inject) >= 0 ? "+" : ""}
-                  {Number(inject).toFixed(1)}
+                  {Number(inject).toFixed(2)} C
+                  {bleConnected && potLink ? " from pot" : ""}
                 </span>
               </label>
-              <button type="button" onClick={onQueueInject}>
-                Queue
-              </button>
-              <button
-                type="button"
-                disabled={queue.queuedHeat == null}
-                onClick={() => {
-                  if (player.current) player.current.clearQueue();
-                  setQueue({ nextStep: queue.nextStep, queuedHeat: null });
-                }}
-              >
-                Clear
-              </button>
+              {playing && (
+                <>
+                  <button type="button" onClick={onQueueInject}>
+                    Queue
+                  </button>
+                  <button
+                    type="button"
+                    disabled={queue.queuedHeat == null}
+                    onClick={() => {
+                      if (player.current) player.current.clearQueue();
+                      setQueue({ nextStep: queue.nextStep, queuedHeat: null });
+                    }}
+                  >
+                    Clear
+                  </button>
+                </>
+              )}
             </>
           )}
         </div>
@@ -383,6 +401,7 @@ export default function App() {
         <BluetoothPanel
           supported={bleSupported()}
           connected={bleConnected}
+          note={bleNote}
           autoSend={bleAutoSend}
           potLink={potLink}
           onAutoSendChange={setBleAutoSend}
