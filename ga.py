@@ -148,7 +148,7 @@ def mutate(child):
     child[i] = 1 - child[i]
     return child
 
-def genetic_algorithm(current_temp, population_size=20, generations=50, mutation_rate=0.1):
+def genetic_algorithm(current_temp, population_size=20, generations=50, mutation_rate=0.1, elite_count=1):
     # random population of size 20 for now
     population = []
     for _ in range(population_size):
@@ -162,18 +162,28 @@ def genetic_algorithm(current_temp, population_size=20, generations=50, mutation
         weights = get_weights(population, current_temp)   
         evaluations += len(population)
 
-        # bulk of the ga for the population size calls all of the helper fuction above 
+        
+        #elitism take some of the best chromosome from the previous population into the new population before modifiying them
+        #zips each chromosomes in the population with there corisponign weights then organises those weight chromosome so the best weighted chromsome is at the front
+        ranked = sorted(zip(weights, population), key=lambda pair: pair[0], reverse=True)
         population2 = []
-        for _ in range(population_size):
+        #takes the top (elite_count) number of chromsome with the highest weight and adds them to that population 2
+        for e in range(elite_count):
+            population2.append(ranked[e][1])   # add the top chromosome(s) first
+
+
+        #fills the new pop with children 
+        while len(population2) < population_size:
             # randomly selects 2 parent based on the weights
             parent1, parent2 = weighted_random_choices(population, weights)
-            #perfomed the cross over
+            # perfomed the cross over
             child = crossover(parent1, parent2)
             #randopmly runs muation sometimes
             if random.random() < mutation_rate:
                 child = mutate(child)
+            #adds all the children in the loop into pop2
             population2.append(child)
-        #make this the new population fo rthe next loop
+        #make this the new population (pop2) into population for the next loop
         population = population2
     
     #after ga done return the best chromosome
@@ -292,7 +302,7 @@ if __name__ == "__main__":
     print("Best Fitness Score:", round(ga_score, 2))
     print("total # evaluations:", (ga_eval))
 
-    # ── Benchmark: average over many runs ────────────────────
+    # benchmarking 
     print("\nBenchmarks (averaged over 30 runs)")
 
     exh_avg_score, exh_avg_evals = benchmark_exhaustive(current_temp)
@@ -302,3 +312,10 @@ if __name__ == "__main__":
     print(f"Exhaustive: avg score {round(exh_avg_score, 2)}, avg evals {round(exh_avg_evals)}")
     print(f"Hill Climb: avg score {round(hc_avg_score, 2)}, avg evals {round(hc_avg_evals)}")
     print(f"GA:         avg score {round(ga_avg_score, 2)}, avg evals {round(ga_avg_evals)}")
+
+    # distance from optimum found by exhastive search
+    hc_percent = (hc_avg_score / exh_avg_score) * 100
+    ga_percent = (ga_avg_score / exh_avg_score) * 100
+
+    print(f"\nHill Climb reached {round(hc_percent, 1)}% of the optimum (exhaustive search)")
+    print(f"GA reached {round(ga_percent, 1)}% of the optimum (exhaustive search)")
