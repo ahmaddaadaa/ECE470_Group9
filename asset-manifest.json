@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/ECE470_Group9/static/css/main.df8368f8.css",
+    "main.js": "/ECE470_Group9/static/js/main.39c70878.js",
+    "index.html": "/ECE470_Group9/index.html",
+    "main.df8368f8.css.map": "/ECE470_Group9/static/css/main.df8368f8.css.map",
+    "main.39c70878.js.map": "/ECE470_Group9/static/js/main.39c70878.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.df8368f8.css",
+    "static/js/main.39c70878.js"
+  ]
+}

@@ -1,0 +1,700 @@
+{
+  "meta": {
+    "generatedAt": "2026-07-12T23:44:31.617684+00:00",
+    "mode": "hybrid_schedule",
+    "scenarioId": "sc_000",
+    "disturbanceScale": 1.0,
+    "population": 60,
+    "generations": 80,
+    "horizon": 8,
+    "controller": "open_loop_schedule_with_slew",
+    "slew": {
+      "nutrients": 2,
+      "mixing": 2,
+      "cooling": 3,
+      "heating": 1
+    },
+    "weights": {
+      "wN": 0.2,
+      "wM": 0.12,
+      "wC": 0.35,
+      "wH": 0.3
+    },
+    "costRates": {
+      "nutrients": 0.5,
+      "mixing": 0.4,
+      "cooling": 1.0,
+      "heating": 0.9,
+      "overlapTaxBeta": 0.5
+    }
+  },
+  "scenario": {
+    "id": "sc_000",
+    "T0": 37.0,
+    "disturbance": [
+      0.0,
+      0.8,
+      1.2,
+      1.0,
+      0.6,
+      0.3,
+      0.1,
+      0.0
+    ],
+    "noise": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "disturbanceScale": 1.0
+  },
+  "bestChromosome": {
+    "binary": "000010000111000101001000000000100100101000100000000001001000000001001000000000000000010111000000",
+    "binaryGrouped": "000 010 000 111 | 000 101 001 000 | 000 000 100 100 | 101 000 100 000 | 000 001 001 000 | 000 001 001 000 | 000 000 000 000 | 010 111 000 000",
+    "encoding": "[Nutrients 3b | Mixing 3b | Cooling 3b | Heating 3b] \u00d7 T",
+    "actions": [
+      {
+        "t": 0,
+        "command": {
+          "nutrients": 0,
+          "mixing": 2,
+          "cooling": 0,
+          "heating": 7,
+          "bits": "[000, 010, 000, 111]"
+        },
+        "applied": {
+          "nutrients": 0,
+          "mixing": 2,
+          "cooling": 0,
+          "heating": 1
+        },
+        "simultaneousHC": false,
+        "stepCost": 1.7
+      },
+      {
+        "t": 1,
+        "command": {
+          "nutrients": 0,
+          "mixing": 5,
+          "cooling": 1,
+          "heating": 0,
+          "bits": "[000, 101, 001, 000]"
+        },
+        "applied": {
+          "nutrients": 0,
+          "mixing": 4,
+          "cooling": 1,
+          "heating": 0
+        },
+        "simultaneousHC": false,
+        "stepCost": 2.6
+      },
+      {
+        "t": 2,
+        "command": {
+          "nutrients": 0,
+          "mixing": 0,
+          "cooling": 4,
+          "heating": 4,
+          "bits": "[000, 000, 100, 100]"
+        },
+        "applied": {
+          "nutrients": 0,
+          "mixing": 2,
+          "cooling": 4,
+          "heating": 1
+        },
+        "simultaneousHC": true,
+        "stepCost": 6.2
+      },
+      {
+        "t": 3,
+        "command": {
+          "nutrients": 5,
+          "mixing": 0,
+          "cooling": 4,
+          "heating": 0,
+          "bits": "[101, 000, 100, 000]"
+        },
+        "applied": {
+          "nutrients": 2,
+          "mixing": 0,
+          "cooling": 4,
+          "heating": 0
+        },
+        "simultaneousHC": false,
+        "stepCost": 5.0
+      },
+      {
+        "t": 4,
+        "command": {
+          "nutrients": 0,
+          "mixing": 1,
+          "cooling": 1,
+          "heating": 0,
+          "bits": "[000, 001, 001, 000]"
+        },
+        "applied": {
+          "nutrients": 0,
+          "mixing": 1,
+          "cooling": 1,
+          "heating": 0
+        },
+        "simultaneousHC": false,
+        "stepCost": 1.4
+      },
+      {
+        "t": 5,
+        "command": {
+          "nutrients": 0,
+          "mixing": 1,
+          "cooling": 1,
+          "heating": 0,
+          "bits": "[000, 001, 001, 000]"
+        },
+        "applied": {
+          "nutrients": 0,
+          "mixing": 1,
+          "cooling": 1,
+          "heating": 0
+        },
+        "simultaneousHC": false,
+        "stepCost": 1.4
+      },
+      {
+        "t": 6,
+        "command": {
+          "nutrients": 0,
+          "mixing": 0,
+          "cooling": 0,
+          "heating": 0,
+          "bits": "[000, 000, 000, 000]"
+        },
+        "applied": {
+          "nutrients": 0,
+          "mixing": 0,
+          "cooling": 0,
+          "heating": 0
+        },
+        "simultaneousHC": false,
+        "stepCost": 0.0
+      },
+      {
+        "t": 7,
+        "command": {
+          "nutrients": 2,
+          "mixing": 7,
+          "cooling": 0,
+          "heating": 0,
+          "bits": "[010, 111, 000, 000]"
+        },
+        "applied": {
+          "nutrients": 2,
+          "mixing": 2,
+          "cooling": 0,
+          "heating": 0
+        },
+        "simultaneousHC": false,
+        "stepCost": 1.8
+      }
+    ]
+  },
+  "fitness": {
+    "aggregate": 38.2739,
+    "historyBest": 38.2739
+  },
+  "statistics": {
+    "pctInRange": 1.0,
+    "meanAbsErrorFrom37": 0.0711,
+    "controlCost": 20.1,
+    "maxTemperature": 37.11,
+    "minTemperature": 36.85,
+    "unsafeSteps": 0,
+    "fitness": 38.2739
+  },
+  "trajectories": {
+    "baseline": [
+      {
+        "time": 0,
+        "temperature": 37.0
+      },
+      {
+        "time": 1,
+        "temperature": 37.0
+      },
+      {
+        "time": 2,
+        "temperature": 37.8
+      },
+      {
+        "time": 3,
+        "temperature": 39.0
+      },
+      {
+        "time": 4,
+        "temperature": 40.0
+      },
+      {
+        "time": 5,
+        "temperature": 40.6
+      },
+      {
+        "time": 6,
+        "temperature": 40.9
+      },
+      {
+        "time": 7,
+        "temperature": 41.0
+      },
+      {
+        "time": 8,
+        "temperature": 41.0
+      }
+    ],
+    "optimized": [
+      {
+        "time": 0,
+        "temperature": 37.0
+      },
+      {
+        "time": 1,
+        "temperature": 37.06
+      },
+      {
+        "time": 2,
+        "temperature": 37.03
+      },
+      {
+        "time": 3,
+        "temperature": 36.89
+      },
+      {
+        "time": 4,
+        "temperature": 36.89
+      },
+      {
+        "time": 5,
+        "temperature": 37.02
+      },
+      {
+        "time": 6,
+        "temperature": 36.85
+      },
+      {
+        "time": 7,
+        "temperature": 36.95
+      },
+      {
+        "time": 8,
+        "temperature": 37.11
+      }
+    ]
+  },
+  "history": [
+    {
+      "generation": 0,
+      "bestFitness": 13.0544,
+      "avgFitness": -300.9098
+    },
+    {
+      "generation": 1,
+      "bestFitness": 14.4867,
+      "avgFitness": -118.2832
+    },
+    {
+      "generation": 2,
+      "bestFitness": 27.4344,
+      "avgFitness": -53.5858
+    },
+    {
+      "generation": 3,
+      "bestFitness": 28.54,
+      "avgFitness": -24.515
+    },
+    {
+      "generation": 4,
+      "bestFitness": 28.54,
+      "avgFitness": -4.6532
+    },
+    {
+      "generation": 5,
+      "bestFitness": 31.2106,
+      "avgFitness": -19.8471
+    },
+    {
+      "generation": 6,
+      "bestFitness": 31.8967,
+      "avgFitness": -24.2456
+    },
+    {
+      "generation": 7,
+      "bestFitness": 32.6,
+      "avgFitness": 5.4232
+    },
+    {
+      "generation": 8,
+      "bestFitness": 32.8133,
+      "avgFitness": 6.7363
+    },
+    {
+      "generation": 9,
+      "bestFitness": 32.8133,
+      "avgFitness": 17.4457
+    },
+    {
+      "generation": 10,
+      "bestFitness": 34.0006,
+      "avgFitness": 12.0047
+    },
+    {
+      "generation": 11,
+      "bestFitness": 34.0006,
+      "avgFitness": 12.2095
+    },
+    {
+      "generation": 12,
+      "bestFitness": 34.0006,
+      "avgFitness": 8.8482
+    },
+    {
+      "generation": 13,
+      "bestFitness": 34.0006,
+      "avgFitness": 16.7028
+    },
+    {
+      "generation": 14,
+      "bestFitness": 34.8906,
+      "avgFitness": 17.6721
+    },
+    {
+      "generation": 15,
+      "bestFitness": 34.8906,
+      "avgFitness": 5.3903
+    },
+    {
+      "generation": 16,
+      "bestFitness": 34.8906,
+      "avgFitness": 12.7492
+    },
+    {
+      "generation": 17,
+      "bestFitness": 35.1294,
+      "avgFitness": 12.8196
+    },
+    {
+      "generation": 18,
+      "bestFitness": 35.1294,
+      "avgFitness": 18.1845
+    },
+    {
+      "generation": 19,
+      "bestFitness": 35.2072,
+      "avgFitness": 21.4435
+    },
+    {
+      "generation": 20,
+      "bestFitness": 35.2072,
+      "avgFitness": 19.8224
+    },
+    {
+      "generation": 21,
+      "bestFitness": 35.5239,
+      "avgFitness": 21.2395
+    },
+    {
+      "generation": 22,
+      "bestFitness": 35.5861,
+      "avgFitness": 22.2637
+    },
+    {
+      "generation": 23,
+      "bestFitness": 35.65,
+      "avgFitness": 14.3719
+    },
+    {
+      "generation": 24,
+      "bestFitness": 35.65,
+      "avgFitness": 18.5534
+    },
+    {
+      "generation": 25,
+      "bestFitness": 35.7139,
+      "avgFitness": 25.4302
+    },
+    {
+      "generation": 26,
+      "bestFitness": 35.8217,
+      "avgFitness": 24.7836
+    },
+    {
+      "generation": 27,
+      "bestFitness": 35.8217,
+      "avgFitness": 10.8798
+    },
+    {
+      "generation": 28,
+      "bestFitness": 36.0439,
+      "avgFitness": 23.3231
+    },
+    {
+      "generation": 29,
+      "bestFitness": 36.5556,
+      "avgFitness": 21.2091
+    },
+    {
+      "generation": 30,
+      "bestFitness": 36.5556,
+      "avgFitness": 27.7288
+    },
+    {
+      "generation": 31,
+      "bestFitness": 36.5556,
+      "avgFitness": 25.8538
+    },
+    {
+      "generation": 32,
+      "bestFitness": 36.9844,
+      "avgFitness": 15.2505
+    },
+    {
+      "generation": 33,
+      "bestFitness": 36.9844,
+      "avgFitness": 26.9183
+    },
+    {
+      "generation": 34,
+      "bestFitness": 36.9844,
+      "avgFitness": 9.186
+    },
+    {
+      "generation": 35,
+      "bestFitness": 36.9844,
+      "avgFitness": 18.1768
+    },
+    {
+      "generation": 36,
+      "bestFitness": 36.9844,
+      "avgFitness": 27.7181
+    },
+    {
+      "generation": 37,
+      "bestFitness": 36.9844,
+      "avgFitness": 25.729
+    },
+    {
+      "generation": 38,
+      "bestFitness": 36.9844,
+      "avgFitness": 15.027
+    },
+    {
+      "generation": 39,
+      "bestFitness": 36.9844,
+      "avgFitness": 25.0221
+    },
+    {
+      "generation": 40,
+      "bestFitness": 36.9844,
+      "avgFitness": 21.7016
+    },
+    {
+      "generation": 41,
+      "bestFitness": 37.3817,
+      "avgFitness": 21.0561
+    },
+    {
+      "generation": 42,
+      "bestFitness": 37.3817,
+      "avgFitness": 23.7437
+    },
+    {
+      "generation": 43,
+      "bestFitness": 37.3817,
+      "avgFitness": 21.4264
+    },
+    {
+      "generation": 44,
+      "bestFitness": 37.3817,
+      "avgFitness": 22.4198
+    },
+    {
+      "generation": 45,
+      "bestFitness": 37.3817,
+      "avgFitness": 25.5582
+    },
+    {
+      "generation": 46,
+      "bestFitness": 37.3817,
+      "avgFitness": 18.0232
+    },
+    {
+      "generation": 47,
+      "bestFitness": 37.3817,
+      "avgFitness": 29.7794
+    },
+    {
+      "generation": 48,
+      "bestFitness": 37.3817,
+      "avgFitness": 25.2641
+    },
+    {
+      "generation": 49,
+      "bestFitness": 37.3817,
+      "avgFitness": 24.35
+    },
+    {
+      "generation": 50,
+      "bestFitness": 37.3817,
+      "avgFitness": 25.753
+    },
+    {
+      "generation": 51,
+      "bestFitness": 37.3817,
+      "avgFitness": 24.3106
+    },
+    {
+      "generation": 52,
+      "bestFitness": 37.3817,
+      "avgFitness": 25.3063
+    },
+    {
+      "generation": 53,
+      "bestFitness": 37.3817,
+      "avgFitness": 27.7297
+    },
+    {
+      "generation": 54,
+      "bestFitness": 37.4211,
+      "avgFitness": 31.8894
+    },
+    {
+      "generation": 55,
+      "bestFitness": 37.4211,
+      "avgFitness": 30.0048
+    },
+    {
+      "generation": 56,
+      "bestFitness": 37.4211,
+      "avgFitness": 33.099
+    },
+    {
+      "generation": 57,
+      "bestFitness": 37.4211,
+      "avgFitness": 33.4715
+    },
+    {
+      "generation": 58,
+      "bestFitness": 37.5428,
+      "avgFitness": 29.3505
+    },
+    {
+      "generation": 59,
+      "bestFitness": 37.5428,
+      "avgFitness": 28.4586
+    },
+    {
+      "generation": 60,
+      "bestFitness": 37.5428,
+      "avgFitness": 31.6518
+    },
+    {
+      "generation": 61,
+      "bestFitness": 37.5428,
+      "avgFitness": 25.9137
+    },
+    {
+      "generation": 62,
+      "bestFitness": 37.5428,
+      "avgFitness": 33.1152
+    },
+    {
+      "generation": 63,
+      "bestFitness": 37.5428,
+      "avgFitness": 33.5487
+    },
+    {
+      "generation": 64,
+      "bestFitness": 37.5428,
+      "avgFitness": 33.1546
+    },
+    {
+      "generation": 65,
+      "bestFitness": 37.5428,
+      "avgFitness": 30.8791
+    },
+    {
+      "generation": 66,
+      "bestFitness": 37.8094,
+      "avgFitness": 31.2315
+    },
+    {
+      "generation": 67,
+      "bestFitness": 37.8094,
+      "avgFitness": 30.6462
+    },
+    {
+      "generation": 68,
+      "bestFitness": 37.8267,
+      "avgFitness": 31.2208
+    },
+    {
+      "generation": 69,
+      "bestFitness": 37.8267,
+      "avgFitness": 30.0034
+    },
+    {
+      "generation": 70,
+      "bestFitness": 37.8267,
+      "avgFitness": 31.2575
+    },
+    {
+      "generation": 71,
+      "bestFitness": 38.0533,
+      "avgFitness": 32.08
+    },
+    {
+      "generation": 72,
+      "bestFitness": 38.0533,
+      "avgFitness": 30.4333
+    },
+    {
+      "generation": 73,
+      "bestFitness": 38.0533,
+      "avgFitness": 33.7525
+    },
+    {
+      "generation": 74,
+      "bestFitness": 38.1406,
+      "avgFitness": 33.5304
+    },
+    {
+      "generation": 75,
+      "bestFitness": 38.1783,
+      "avgFitness": 29.1553
+    },
+    {
+      "generation": 76,
+      "bestFitness": 38.1783,
+      "avgFitness": 24.6856
+    },
+    {
+      "generation": 77,
+      "bestFitness": 38.2378,
+      "avgFitness": 29.6313
+    },
+    {
+      "generation": 78,
+      "bestFitness": 38.2739,
+      "avgFitness": 33.1034
+    },
+    {
+      "generation": 79,
+      "bestFitness": 38.2739,
+      "avgFitness": 33.1171
+    }
+  ]
+}
