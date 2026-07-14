@@ -1,5 +1,5 @@
 import random
-
+import matplotlib.pyplot as plt
 
 # makes a random 12 bit binary list (our chromosome)
 def create_chromosome():
@@ -316,6 +316,40 @@ if __name__ == "__main__":
     # distance from optimum found by exhastive search
     hc_percent = (hc_avg_score / exh_avg_score) * 100
     ga_percent = (ga_avg_score / exh_avg_score) * 100
-
     print(f"\nHill Climb reached {round(hc_percent, 1)}% of the optimum (exhaustive search)")
     print(f"GA reached {round(ga_percent, 1)}% of the optimum (exhaustive search)")
+
+
+    #bar charts
+    plt.figure()
+
+
+    # how close each method got to the global optimum as a percent (averaged over 30 runs)
+    methods = ["Exhaustive", "Hill Climbing", "GA"]
+    scores = [100, hc_percent, ga_percent]
+
+    plt.bar(methods, scores, color=["gray", "orange", "green"])
+    plt.ylabel("Average Fitness Score")
+    plt.title("Percent of Optimum: Exhaustive vs Hill Climbing vs GA averaged over 30 runs")
+    plt.savefig("benchmark_chart.png")   
+          
+
+    plt.figure()
+
+    # average number of fitness evaluations per run (over 30 runs)
+    methods = ["Exhaustive", "Hill Climbing", "GA"]
+    evals = [exh_avg_evals, hc_avg_evals, ga_avg_evals]
+
+    plt.bar(methods, evals, color=["gray", "orange", "green"])
+    plt.ylabel("Average Evaluations")
+    plt.title("Evaluations (Cost): Exhaustive vs Hill Climbing vs GA")
+    plt.savefig("evaluations_chart.png")
+
+    plt.figure()
+
+
+
+
+    plt.show()   
+
+                
