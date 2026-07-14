@@ -1,5 +1,6 @@
 import random
 
+
 # makes a random 12 bit binary list (our chromosome)
 def create_chromosome():
     chromosome = []
@@ -49,9 +50,10 @@ def calculate_fitness(chromosome, final_temp):
 
 #perform a search of the the whole seach space to find the best chromsome
 
-def exhastive_search(current_temp):
+def exhaustive_search(current_temp):
     best_chrom = None
     best_score = -9999
+    evaluations = 0
 
     # loops though whole search space each loop make a chromosome based on the numbers (i)
     
@@ -64,13 +66,14 @@ def exhastive_search(current_temp):
         # caluclates the tmep and score for the curent choromosome
         final_temp = simulate_temperature(chromosome, current_temp)
         new_score = calculate_fitness(chromosome, final_temp)
+        evaluations += 1
 
         # finds the best score over all loops as only changes if the next score is larger than the previous socre
         if new_score > best_score:
             best_score = new_score
             best_chrom = chromosome
     
-    return best_chrom, best_score
+    return best_chrom, best_score, evaluations
 
 
 
@@ -79,6 +82,7 @@ def hill_climbing(current_temp):
     current_chrom = create_chromosome()
     final_temp = simulate_temperature(current_chrom, current_temp)
     current_score = calculate_fitness(current_chrom, final_temp)
+    evaluations = 1 
 
     # take that chrom flipes on bit at a time (flips the 0th bit only, first bit only etc) if the next 
     # alteration had a greater score than the previous one new best neighbour.
@@ -91,6 +95,7 @@ def hill_climbing(current_temp):
             candidate[i] = 1 - candidate[i]
             candidate_temp = simulate_temperature(candidate, current_temp)
             candidate_score = calculate_fitness(candidate, candidate_temp)
+            evaluations += 1 
             if candidate_score > best_neighbour_score:
                 best_neighbour_score = candidate_score
                 best_neighbour = candidate
@@ -99,7 +104,7 @@ def hill_climbing(current_temp):
         # exit function: if at the end of the above for loop the all the flip dont improve the score we can leave as we are at "the top of the hill"
         #  < is there for the noise edge case 
         if best_neighbour_score <= current_score:
-            return current_chrom, current_score
+            return current_chrom, current_score, evaluations
         
 
 
@@ -149,11 +154,13 @@ def genetic_algorithm(current_temp, population_size=20, generations=50, mutation
     for _ in range(population_size):
         population.append(create_chromosome())
 
+    evaluations = 0
+
 
     # repeats for a number of generations get the weights (based on score) of the wcurrent loops population 
     for generation in range(generations):
         weights = get_weights(population, current_temp)   
-        
+        evaluations += len(population)
 
         # bulk of the ga for the population size calls all of the helper fuction above 
         population2 = []
@@ -171,12 +178,70 @@ def genetic_algorithm(current_temp, population_size=20, generations=50, mutation
     
     #after ga done return the best chromosome
     weights = get_weights(population, current_temp)
+    evaluations += len(population)
+
     best_index = weights.index(max(weights))
     best_chrom = population[best_index]
-    return best_chrom, weights[best_index]
+    return best_chrom, weights[best_index], evaluations
+
+def benchmark_exhaustive(current_temp, runs=30):
+    exh_scores = []
+    exh_evals = []
+
+    #loops though set amount of runs
+    for _ in range(runs):
+        chrom, score, evaluations = exhaustive_search(current_temp)
+        exh_scores.append(score)
+        exh_evals.append(evaluations)  
+
+    #averages all run together
+    avg_score = sum(exh_scores) / len(exh_scores)
+    avg_evals = sum(exh_evals) / len(exh_evals)
+    return avg_score, avg_evals
+
+#hc benchmark 30 runs
+def benchmark_HC(current_temp, runs=30):
+    hc_scores = []
+    hc_evals = []
+
+    #loops though set amount of runs
+    for _ in range(runs):
+        chrom, score, evaluations = hill_climbing(current_temp)
+        hc_scores.append(score)
+        hc_evals.append(evaluations)  
+
+    #averages all run together
+    avg_score = sum(hc_scores) / len(hc_scores)
+    avg_evals = sum(hc_evals) / len(hc_evals)
+    return avg_score, avg_evals
+
+#ga benchmark 30 runs
+
+def benchmark_ga(current_temp, runs=30):
+    scores = []
+    evals = [] 
+
+    #loops though set about of runs
+    for _ in range(runs):
+        chrom, score, evaluations = genetic_algorithm(current_temp)
+        scores.append(score)
+        evals.append(evaluations)       
+
+    #averages all run together
+    avg_score = sum(scores) / len(scores)
+    avg_evals = sum(evals) / len(evals)
+    return avg_score, avg_evals
+
+
+
+
+
+
 
 #test based on 42 degree temp
 if __name__ == "__main__":
+
+    
 
 
     print("\nsingle random chromosome")
@@ -201,25 +266,39 @@ if __name__ == "__main__":
 
     #exhastive search 
     print("\nExhaustive Search")
-    exh_chrom, exh_score = exhastive_search(current_temp)
+    exh_chrom, exh_score, exh_eval = exhaustive_search(current_temp)
     exh_temp = simulate_temperature(exh_chrom, current_temp)
     print("Best exhastive search Chromosome:", exh_chrom)
     print("Best Final Temp:", round(exh_temp, 2), "°C")
     print("Best Fitness Score:", round(exh_score, 2))
+    print("total # of evaluations:", (exh_eval))
 
 
     #hill climbing
     print("\nHill Climbing")
-    hc_chrom, hc_score = hill_climbing(current_temp)
+    hc_chrom, hc_score, hc_eval = hill_climbing(current_temp)
     hc_temp = simulate_temperature(hc_chrom, current_temp)
     print("Best hill climbing Chromosome:", hc_chrom)
     print("Best Final Temp:", round(hc_temp, 2), "°C")
     print("Best Fitness Score:", round(hc_score, 2))
+    print("total # evaluations:", (hc_eval))
 
     # genetic algorithm
     print("\nGenetic Algorithm")
-    ga_chrom, ga_score = genetic_algorithm(current_temp)
+    ga_chrom, ga_score, ga_eval = genetic_algorithm(current_temp)
     ga_temp = simulate_temperature(ga_chrom, current_temp)
     print("Best GA Chromosome:", ga_chrom)
     print("Best Final Temp:", round(ga_temp, 2), "°C")
     print("Best Fitness Score:", round(ga_score, 2))
+    print("total # evaluations:", (ga_eval))
+
+    # ── Benchmark: average over many runs ────────────────────
+    print("\nBenchmarks (averaged over 30 runs)")
+
+    exh_avg_score, exh_avg_evals = benchmark_exhaustive(current_temp)
+    hc_avg_score, hc_avg_evals = benchmark_HC(current_temp)
+    ga_avg_score, ga_avg_evals = benchmark_ga(current_temp)
+
+    print(f"Exhaustive: avg score {round(exh_avg_score, 2)}, avg evals {round(exh_avg_evals)}")
+    print(f"Hill Climb: avg score {round(hc_avg_score, 2)}, avg evals {round(hc_avg_evals)}")
+    print(f"GA:         avg score {round(ga_avg_score, 2)}, avg evals {round(ga_avg_evals)}")
