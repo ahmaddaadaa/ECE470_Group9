@@ -31,7 +31,7 @@ def simulate_temperature(chromosome, current_temp):
         + 8  * bits_to_percent(heating)
         - 4  * bits_to_percent(mixing)
         + 6  * bits_to_percent(nutrients)
-        + random.uniform(-0.5, 0.5)  # noise
+        + random.gauss(0, 0.05)  # noise
     )
     return current_temp + delta_T
 
@@ -125,21 +125,21 @@ def get_weights(population, current_temp):
     return weights
 
 
-# due to fitness function some score can be negative take the lowest shiftes it up along with everything to remove negative
-# then randomly chooses two parent with (higher weight mean more likely to be choosen)
-def weighted_random_choices(population, weights):
-    min_weight = min(weights)
-    shifted = [w - min_weight + 1 for w in weights]  # +1 so worst still has a small chance
+# grab k random chromosomes and return the best one
+# good chromosomes win their tournaments so they're picked more often
+def tournament_select(population, weights, k=3):
+    best_index = random.randrange(len(population))
+    for _ in range(k - 1):
+        i = random.randrange(len(population))
+        if weights[i] > weights[best_index]:
+            best_index = i
+    return population[best_index]
 
-    parent1 = random.choices(population, weights=shifted, k=1)[0]
-    parent2 = random.choices(population, weights=shifted, k=1)[0]
-    return parent1, parent2
-
-
-#randomly cuts both parent and creates a new child out of the front of parent one and back of parent 2
+# randomly cuts both parent twice creates a new child out of the front and back of parent one and middle of parent 2
 def crossover(parent1, parent2):
-    split = random.randint(1, 11)              
-    child = parent1[:split] + parent2[split:]  
+    p1 = random.randint(1, 10)
+    p2 = random.randint(p1 + 1, 11)
+    child = parent1[:p1] + parent2[p1:p2] + parent1[p2:]
     return child
 
 # take the child and if mutate is called flips one of the bit in the chromosome randomly
@@ -148,19 +148,26 @@ def mutate(child):
     child[i] = 1 - child[i]
     return child
 
-def genetic_algorithm(current_temp, population_size=20, generations=50, mutation_rate=0.1, elite_count=1):
+def genetic_algorithm(current_temp, population_size=20, generations=50, mutation_rate=0.1, elite_count=3):
     # random population of size 20 for now
     population = []
     for _ in range(population_size):
         population.append(create_chromosome())
 
     evaluations = 0
+    history = []
 
 
     # repeats for a number of generations get the weights (based on score) of the wcurrent loops population 
     for generation in range(generations):
         weights = get_weights(population, current_temp)   
         evaluations += len(population)
+        #history.append(max(weights))
+        current_best = max(weights)
+        if not history:
+            history.append(current_best)
+        else:
+            history.append(max(current_best, history[-1]))
 
         
         #elitism take some of the best chromosome from the previous population into the new population before modifiying them
@@ -174,8 +181,10 @@ def genetic_algorithm(current_temp, population_size=20, generations=50, mutation
 
         #fills the new pop with children 
         while len(population2) < population_size:
-            # randomly selects 2 parent based on the weights
-            parent1, parent2 = weighted_random_choices(population, weights)
+            
+            # tournament selection picks each parent
+            parent1 = tournament_select(population, weights)
+            parent2 = tournament_select(population, weights)
             # perfomed the cross over
             child = crossover(parent1, parent2)
             #randopmly runs muation sometimes
@@ -192,7 +201,7 @@ def genetic_algorithm(current_temp, population_size=20, generations=50, mutation
 
     best_index = weights.index(max(weights))
     best_chrom = population[best_index]
-    return best_chrom, weights[best_index], evaluations
+    return best_chrom, weights[best_index], evaluations, history
 
 def benchmark_exhaustive(current_temp, runs=30):
     exh_scores = []
@@ -233,7 +242,7 @@ def benchmark_ga(current_temp, runs=30):
 
     #loops though set about of runs
     for _ in range(runs):
-        chrom, score, evaluations = genetic_algorithm(current_temp)
+        chrom, score, evaluations, history = genetic_algorithm(current_temp)
         scores.append(score)
         evals.append(evaluations)       
 
@@ -250,9 +259,6 @@ def benchmark_ga(current_temp, runs=30):
 
 #test based on 42 degree temp
 if __name__ == "__main__":
-
-    
-
 
     print("\nsingle random chromosome")
     #create crom
@@ -295,7 +301,7 @@ if __name__ == "__main__":
 
     # genetic algorithm
     print("\nGenetic Algorithm")
-    ga_chrom, ga_score, ga_eval = genetic_algorithm(current_temp)
+    ga_chrom, ga_score, ga_eval, ga_hist = genetic_algorithm(current_temp)
     ga_temp = simulate_temperature(ga_chrom, current_temp)
     print("Best GA Chromosome:", ga_chrom)
     print("Best Final Temp:", round(ga_temp, 2), "°C")
@@ -327,11 +333,17 @@ if __name__ == "__main__":
     # how close each method got to the global optimum as a percent (averaged over 30 runs)
     methods = ["Exhaustive", "Hill Climbing", "GA"]
     scores = [100, hc_percent, ga_percent]
+    bars = plt.bar(methods, scores, color=["gray", "orange", "green"])
 
-    plt.bar(methods, scores, color=["gray", "orange", "green"])
-    plt.ylabel("Average Fitness Score")
-    plt.title("Percent of Optimum: Exhaustive vs Hill Climbing vs GA averaged over 30 runs")
-    plt.savefig("benchmark_chart.png")   
+    # add the number on top of each bar
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2, height + 1,
+                 f"{round(height, 1)}%", ha="center")
+
+    plt.ylabel("Percent of Optimum (%)")
+    plt.title("Percent of Optimum: Exhaustive vs Hill Climbing vs GA")
+    plt.savefig("benchmark_chart.png")
           
 
     plt.figure()
@@ -340,7 +352,13 @@ if __name__ == "__main__":
     methods = ["Exhaustive", "Hill Climbing", "GA"]
     evals = [exh_avg_evals, hc_avg_evals, ga_avg_evals]
 
-    plt.bar(methods, evals, color=["gray", "orange", "green"])
+    eval_bars = plt.bar(methods, evals, color=["gray", "orange", "green"])
+
+    for bar in eval_bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width()/2, height + 1,
+                 f"{round(height, 1)}", ha="center")
+
     plt.ylabel("Average Evaluations")
     plt.title("Evaluations (Cost): Exhaustive vs Hill Climbing vs GA")
     plt.savefig("evaluations_chart.png")
@@ -348,6 +366,13 @@ if __name__ == "__main__":
     plt.figure()
 
 
+    #single run best score shown so far fo reach genertaion (done to show impovment )
+    
+    plt.plot(ga_hist, color="green", marker="o")
+    plt.xlabel("Generation")
+    plt.ylabel("Best Fitness Score")
+    plt.title("GA Convergence: Best Score Over Generations")
+    plt.savefig("convergence_chart.png")
 
 
     plt.show()   
