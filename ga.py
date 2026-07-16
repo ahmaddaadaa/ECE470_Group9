@@ -31,7 +31,7 @@ def simulate_temperature(chromosome, current_temp):
         + 8  * bits_to_percent(heating)
         - 4  * bits_to_percent(mixing)
         + 6  * bits_to_percent(nutrients)
-        + random.gauss(0, 0.05)  # noise
+        + random.gauss(-0.05, 0.05)  # noise
     )
     return current_temp + delta_T
 
@@ -216,7 +216,7 @@ def benchmark_exhaustive(current_temp, runs=30):
     #averages all run together
     avg_score = sum(exh_scores) / len(exh_scores)
     avg_evals = sum(exh_evals) / len(exh_evals)
-    return avg_score, avg_evals
+    return avg_score, avg_evals, exh_scores
 
 #hc benchmark 30 runs
 def benchmark_HC(current_temp, runs=30):
@@ -232,7 +232,7 @@ def benchmark_HC(current_temp, runs=30):
     #averages all run together
     avg_score = sum(hc_scores) / len(hc_scores)
     avg_evals = sum(hc_evals) / len(hc_evals)
-    return avg_score, avg_evals
+    return avg_score, avg_evals, hc_scores
 
 #ga benchmark 30 runs
 
@@ -249,11 +249,7 @@ def benchmark_ga(current_temp, runs=30):
     #averages all run together
     avg_score = sum(scores) / len(scores)
     avg_evals = sum(evals) / len(evals)
-    return avg_score, avg_evals
-
-
-
-
+    return avg_score, avg_evals, scores
 
 
 
@@ -311,15 +307,16 @@ if __name__ == "__main__":
     # benchmarking 
     print("\nBenchmarks (averaged over 30 runs)")
 
-    exh_avg_score, exh_avg_evals = benchmark_exhaustive(current_temp)
-    hc_avg_score, hc_avg_evals = benchmark_HC(current_temp)
-    ga_avg_score, ga_avg_evals = benchmark_ga(current_temp)
+    exh_avg_score, exh_avg_evals, exh_all = benchmark_exhaustive(current_temp)
+    hc_avg_score, hc_avg_evals, hc_all = benchmark_HC(current_temp)
+    ga_avg_score, ga_avg_evals, ga_all = benchmark_ga(current_temp)
 
     print(f"Exhaustive: avg score {round(exh_avg_score, 2)}, avg evals {round(exh_avg_evals)}")
     print(f"Hill Climb: avg score {round(hc_avg_score, 2)}, avg evals {round(hc_avg_evals)}")
     print(f"GA:         avg score {round(ga_avg_score, 2)}, avg evals {round(ga_avg_evals)}")
 
     # distance from optimum found by exhastive search
+    exh_percent = (exh_avg_score / exh_avg_score) * 100
     hc_percent = (hc_avg_score / exh_avg_score) * 100
     ga_percent = (ga_avg_score / exh_avg_score) * 100
     print(f"\nHill Climb reached {round(hc_percent, 1)}% of the optimum (exhaustive search)")
@@ -332,19 +329,38 @@ if __name__ == "__main__":
 
     # how close each method got to the global optimum as a percent (averaged over 30 runs)
     methods = ["Exhaustive", "Hill Climbing", "GA"]
-    scores = [100, hc_percent, ga_percent]
+
+
+    scores = [exh_percent, hc_percent, ga_percent]
     bars = plt.bar(methods, scores, color=["gray", "orange", "green"])
 
-    # add the number on top of each bar
     for bar in bars:
         height = bar.get_height()
         plt.text(bar.get_x() + bar.get_width()/2, height + 1,
                  f"{round(height, 1)}%", ha="center")
 
     plt.ylabel("Percent of Optimum (%)")
-    plt.title("Percent of Optimum: Exhaustive vs Hill Climbing vs GA")
+    plt.title("Percent of Optimum (30-run average, exhaustive = 100%)")
     plt.savefig("benchmark_chart.png")
-          
+
+    plt.figure()
+
+    # box plot shows scores over 30 run to show consistancy or reliability
+    # Box plot with individual run dots (shows spread + actual data points)
+    
+    data = [exh_all, hc_all, ga_all]
+    plt.boxplot(data, tick_labels=["Exhaustive", "Hill Climbing", "GA"])
+
+    # overlay each run as a dot
+    for i in range(3):
+        # x position: boxes are at 1, 2, 3 — scatter dots around that x with a little random spread
+        x = [i + 1 + random.uniform(-0.05, 0.05) for _ in range(len(data[i]))]
+        plt.scatter(x, data[i], color="black", alpha=0.5, s=15)
+
+    plt.ylabel("Fitness Score")
+    plt.title("Score Distribution Across 30 Runs")
+    plt.savefig("boxplot_chart.png")
+
 
     plt.figure()
 
@@ -360,18 +376,37 @@ if __name__ == "__main__":
                  f"{round(height, 1)}", ha="center")
 
     plt.ylabel("Average Evaluations")
-    plt.title("Evaluations (Cost): Exhaustive vs Hill Climbing vs GA")
+    plt.title("Average number of fitness evaluations of each method over 30 runs")
     plt.savefig("evaluations_chart.png")
+
 
     plt.figure()
 
+    #scatter plot showing score over evalaution (over 30 rubnun)
+    scatter_scores = [exh_avg_score, hc_avg_score, ga_avg_score]
+    scatter_evals = [exh_avg_evals, hc_avg_evals, ga_avg_evals]
+    colors = ["gray", "orange", "green"]
+    labels = ["Exhaustive", "Hill Climbing", "GA"]
 
-    #single run best score shown so far fo reach genertaion (done to show impovment )
+    for i in range(3):
+        plt.scatter(scatter_evals[i], scatter_scores[i], color=colors[i], s=100, label=labels[i])
+
+    plt.xlabel("Evaluations (Cost)")
+    plt.ylabel("Average Fitness Score (Quality)")
+    plt.title("Quality vs Cost of methods over 30 runs (Top right is best)")
+    plt.legend()
+    plt.gca().invert_xaxis()
+    plt.savefig("scatter_chart.png")
+
+
+    plt.figure()
+
+    #single run best score shown so far up to and including that genration (done to show overall improvement wewwith th evariability of noise)
     
     plt.plot(ga_hist, color="green", marker="o")
     plt.xlabel("Generation")
     plt.ylabel("Best Fitness Score")
-    plt.title("GA Convergence: Best Score Over Generations")
+    plt.title("Genetic algorithm best Score so far over generations")
     plt.savefig("convergence_chart.png")
 
 
